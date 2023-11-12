@@ -5,11 +5,11 @@
 java -jar path/to/jsnippets.jar
 
 ## run requirements
-jre 17
-postgresql
-mail server (optional)
+- jre 17
+- postgresql
+- mail server (optional)
 
 ## build requirements
 
-jdk 17
-maven 3
+- jdk 17
+- maven 3
