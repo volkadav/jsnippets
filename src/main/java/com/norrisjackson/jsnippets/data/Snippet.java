@@ -15,14 +15,14 @@ import lombok.*;
 public class Snippet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @NotNull
     private String contents;
 
-    @JoinColumn(name = "poster_id")
     @NotNull
     @ManyToOne
+    @JoinColumn(name = "poster_id")
     private User poster;
 
     @Column(name = "created_at")

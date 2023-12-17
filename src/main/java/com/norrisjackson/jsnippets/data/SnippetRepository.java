@@ -1,7 +1,11 @@
 package com.norrisjackson.jsnippets.data;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface SnippetRepository extends JpaRepository<Snippet, Integer> {
+import java.util.List;
+import java.util.Optional;
 
+public interface SnippetRepository extends JpaRepository<Snippet, Long> {
+    List<Snippet> findByPosterId(Long posterId, Pageable page);
 }

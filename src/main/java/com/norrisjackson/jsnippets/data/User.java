@@ -1,5 +1,6 @@
 package com.norrisjackson.jsnippets.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -15,7 +16,7 @@ import java.util.Date;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @NotNull
     private String name;
@@ -24,15 +25,19 @@ public class User {
     private String email;
 
     @Column(name = "salt")
+    @JsonIgnore
     private String passwordSalt;
 
     @Column(name = "hash")
+    @JsonIgnore
     private String passwordHash;
 
     @NotNull
+    @JsonIgnore
     @Column(name = "created_at")
     private Date createdAt;
 
     @Column(name = "last_login")
+    @JsonIgnore
     private Date lastLoggedInAt;
 }
