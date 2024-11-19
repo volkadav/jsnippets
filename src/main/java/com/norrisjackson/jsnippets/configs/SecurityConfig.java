@@ -13,11 +13,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         // for now, leave everything open (todo: implement authn/authz stuff atop all this)
-        http.authorizeHttpRequests(expressionInterceptUrlRegistry ->
+        http
+                .formLogin(form -> form
+                    .loginPage("/login")
+                    .permitAll())
+                .authorizeHttpRequests(expressionInterceptUrlRegistry ->
                         expressionInterceptUrlRegistry
                                 .anyRequest()
-                                .permitAll())
-                .csrf(AbstractHttpConfigurer::disable);
+                                .permitAll());
         return http.build();
     }
 }

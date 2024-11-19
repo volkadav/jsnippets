@@ -95,8 +95,17 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<image>
+						<name>norrisjackson.com/${project.artifactId}</name>
 						<builder>paketobuildpacks/builder-jammy-base:latest</builder>
 					</image>
+					<docker>
+						<!-- on macOS, if you're using podman, you'll want to use
+						 something like "unix:///Users/you/.local/share/containers/podman/machine/podman.sock"
+						 here. if you have podman-desktop installed too, you can enable
+						 "docker compatibility mode" in settings and use the more
+						 customary path below unchanged. -->
+						<host>unix:///var/run/docker.sock</host>
+					</docker>
 					<excludes>
 						<exclude>
 							<groupId>org.projectlombok</groupId>
@@ -104,8 +113,14 @@
 						</exclude>
 					</excludes>
 				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
