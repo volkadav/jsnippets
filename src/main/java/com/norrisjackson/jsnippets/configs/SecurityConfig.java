@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -14,13 +15,14 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         // for now, leave everything open (todo: implement authn/authz stuff atop all this)
         http
-                .formLogin(form -> form
-                    .loginPage("/login")
-                    .permitAll())
-                .authorizeHttpRequests(expressionInterceptUrlRegistry ->
-                        expressionInterceptUrlRegistry
-                                .anyRequest()
-                                .permitAll());
+            .formLogin(form -> form
+                .loginPage("/login")
+                .permitAll())
+            .logout(LogoutConfigurer::permitAll)
+            .authorizeHttpRequests(
+                requests -> requests
+                    .requestMatchers("/").permitAll()
+                    .anyRequest().authenticated());
         return http.build();
     }
 }

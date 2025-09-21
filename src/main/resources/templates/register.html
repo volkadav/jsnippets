@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>jsnippets - account registration</title>
+</head>
+<body>
+    <h1>JSnippets: Account Registration</h1>
+    <div th:if="${param.error}"><p th:text="${error}"></p></div>
+    <form th:action="@{/register}" method="post">
+        <div>
+            <label>Username:
+                <input type="text" name="username" placeholder="Username"/>
+            </label>
+        </div>
+        <div>
+            <label>Email:
+                <input type="email" name="email" placeholder="Email"/>
+            </label>
+        </div>
+        <div>
+            <label>Password:
+                <input type="password" name="password" placeholder="Password"/>
+            </label>
+        </div>
+        <div>
+            <label>Password again:
+                <input type="password" name="password2" placeholder="Password again"/>
+            </label>
+        </div>
+        <input type="submit" value="Register" />
+    </form>
+    <p>Already have an account? <a th:href="@{/login}">Log in here!</a></p>
+</body>
+</html>

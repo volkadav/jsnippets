@@ -1,20 +1,26 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<html lang="en" xmlns:th="https://www.thymeleaf.org">
     <head>
-        <title>Please Log In</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>jsnippets -- login</title>
     </head>
     <body>
         <h1>Please log in:</h1>
-        <div th:if="${param.error}">Invalid username and password.</div>
+        <div th:if="${param.error}"><p th:text="${error}"/></div>
         <div th:if="${param.logout}">You have been logged out.</div>
         <form th:action="@{/login}" method="post">
             <div>
-                <input type="text" name="username" placeholder="Username"/>
+                <label>Username:
+                    <input type="text" name="username" placeholder="Username"/>
+                </label>
             </div>
             <div>
-                <input type="password" name="password" placeholder="Password"/>
+                <label>Password:
+                    <input type="password" name="password" placeholder="Password"/>
+                </label>
             </div>
             <input type="submit" value="Log in" />
         </form>
+        <p>Don't have an account? <a th:href="@{/register}">Register here!</a></p>
     </body>
 </html>
