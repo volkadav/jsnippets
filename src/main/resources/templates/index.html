@@ -3,9 +3,30 @@
     <head>
         <title>JSnippets</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}" />
+        <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
     </head>
     <body>
-    <h1>JSnippets - status reporting, simplified</h1>
-        <p th:text="${message}">default</p>
+    <div class="container mt-4">
+        <h1 class="mb-4">JSnippets <small class="text-muted">status reporting, simplified</small></h1>
+        <p th:if="${greeting}" th:text="${greeting}" class="alert alert-info"></p>
+        <p th:unless="${greeting}" class="alert alert-secondary">Welcome, guest! Please
+            <a th:href="@{/login}" class="btn btn-link p-0">login</a> or
+            <a th:href="@{/register}" class="btn btn-link p-0">register an account</a>.
+        </p>
+        <div th:if="${username}" class="card mt-4">
+            <div class="card-body">
+                <p>Your registered email is <span th:text="${email}" class="fw-bold"></span>.</p>
+                <h2 class="h5 mt-3">Actions</h2>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item"><a th:href="@{/snippets/new}">Create a new snippet</a></li>
+                    <li class="list-group-item"><a th:href="@{/snippets}">View your snippets</a></li>
+                </ul>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-outline-danger">Log out</button>
+                </form>
+            </div>
+        </div>
+    </div>
     </body>
 </html>

@@ -1,9 +1,8 @@
 create table users(
     id bigserial not null,
-    name text not null,
+    username text not null,
     email text not null,
-    salt text,
-    hash text,
+    password_hash text not null,
     created_at timestamp not null default now(),
     last_login timestamp,
     primary key (id)

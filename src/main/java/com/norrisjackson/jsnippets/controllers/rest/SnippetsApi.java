@@ -4,6 +4,7 @@ import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.SnippetRepository;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.data.UserRepository;
+import com.norrisjackson.jsnippets.services.SnippetService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,17 +24,21 @@ import java.util.Optional;
 @RestController
 @RequestMapping(path = "/api/snippets", produces = "application/json")
 @Slf4j
-public class Snippets {
+public class SnippetsApi {
     @Autowired
     SnippetRepository snippets;
 
     @Autowired
     UserRepository users;
 
+    @Autowired
+    SnippetService snippetService;
+
     @GetMapping
     public Iterable<Snippet> findAll(@RequestParam("pageNumber") Optional<Integer> pageNumber,
                                      @RequestParam("pageSize") Optional<Integer> pageSize,
                                      @RequestParam("posterId") Optional<Long> posterId) {
+        // Paging and sorting logic remains here, but delegate to service for fetching
         PageRequest page = PageRequest.of(pageNumber.orElse(0), pageSize.orElse(20),
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
@@ -43,60 +48,50 @@ public class Snippets {
             if (poster == null) {
                 return Collections.emptyList();
             }
-            return snippets.findByPosterId(posterId.get(), page);
+            // If you want to move this logic to the service, add a method for it
+            return snippetService.getSnippetsByPosterId(posterId.get(), page);
         } else {
-            return snippets.findAll(page).getContent();
+            return snippetService.getAllSnippets(page);
         }
     }
 
     @GetMapping("/{snippetId}")
     public ResponseEntity<Snippet> findById(@PathVariable("snippetId") Long snippetId) {
-        Snippet s = snippets.findById(snippetId).orElse(null);
-
-        return (s == null)
-                ? ResponseEntity.status(HttpStatus.NOT_FOUND).body(null)
-                : ResponseEntity.ok(s);
+        Optional<Snippet> s = snippetService.getSnippetById(snippetId);
+        return s.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
     }
-
-
 
     @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Snippet> addSnippet(@RequestParam Long posterId,
-                              @RequestParam String contents) {
+                                              @RequestParam String contents) {
+
+        // todo: auth token or something to authenticate request
         User poster = users.findById(posterId).orElse(null);
         if (poster == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
-        Snippet s = new Snippet();
-        s.setPoster(poster);
-        s.setContents(contents);
-        s.setCreatedAt(new Date());
-        return ResponseEntity.ok(snippets.save(s));
+        return ResponseEntity.ok(snippetService.createSnippet(contents, poster));
     }
 
     @PatchMapping(path = "/{snippetId}", consumes = "application/json")
     public ResponseEntity<Snippet> editSnippet(@PathVariable("snippetId") Long snippetId,
                                       @RequestBody Snippet snippetNew) {
-        Snippet snippetOld = snippets.findById(snippetId).orElse(null);
-
-        if (snippetOld == null || Strings.isBlank(snippetNew.getContents())) {
+        if (Strings.isBlank(snippetNew.getContents())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
-
-        snippetOld.setContents(snippetNew.getContents());
-        snippetOld.setEditedAt(new Date());
-        snippets.save(snippetOld);
-
-        return ResponseEntity.ok(snippetOld);
+        Optional<Snippet> updated = snippetService.updateSnippet(snippetId, snippetNew.getContents());
+        return updated.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null));
     }
 
     @DeleteMapping("/{snippetId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteSnippet(@PathVariable Long snippetId) {
         try {
-            snippets.deleteById(snippetId);
+            snippetService.deleteSnippet(snippetId);
         } catch (EmptyResultDataAccessException e) {
             log.info("someone tried to delete a snippet with id {} that doesn't exist", snippetId);
         }

@@ -3,33 +3,35 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>jsnippets - account registration</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}" />
+    <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
 </head>
 <body>
-    <h1>JSnippets: Account Registration</h1>
-    <div th:if="${param.error}"><p th:text="${error}"></p></div>
-    <form th:action="@{/register}" method="post">
-        <div>
-            <label>Username:
-                <input type="text" name="username" placeholder="Username"/>
-            </label>
+    <div class="container mt-5" style="max-width: 500px;">
+        <h1 class="mb-4 text-center">Account Registration</h1>
+        <div th:if="${param.error}" class="alert alert-danger" role="alert">
+            <span th:text="${error}">Registration error.</span>
         </div>
-        <div>
-            <label>Email:
-                <input type="email" name="email" placeholder="Email"/>
-            </label>
-        </div>
-        <div>
-            <label>Password:
-                <input type="password" name="password" placeholder="Password"/>
-            </label>
-        </div>
-        <div>
-            <label>Password again:
-                <input type="password" name="password2" placeholder="Password again"/>
-            </label>
-        </div>
-        <input type="submit" value="Register" />
-    </form>
-    <p>Already have an account? <a th:href="@{/login}">Log in here!</a></p>
+        <form th:action="@{/register}" method="post" class="card p-4 shadow-sm">
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username" placeholder="Username" required />
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="Email" required />
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Password" required />
+            </div>
+            <div class="mb-3">
+                <label for="password2" class="form-label">Password again</label>
+                <input type="password" class="form-control" id="password2" name="password2" placeholder="Password again" required />
+            </div>
+            <button type="submit" class="btn btn-success w-100">Register</button>
+        </form>
+        <p class="mt-3 text-center">Already have an account? <a th:href="@{/login}">Log in here!</a></p>
+    </div>
 </body>
 </html>

@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.google.common.base.Strings;
 
+import java.util.Optional;
+
 @Controller
 @Slf4j
 public class Register {
@@ -59,13 +61,14 @@ public class Register {
             return "redirect:/register?error=emailexists";
         }
 
-        User newUser = userSvc.createUser(username, password, email);
-        if (newUser == null) {
+        Optional<User> userOpt = userSvc.createUser(username, password, email);
+        if (userOpt.isEmpty()) {
             log.warn("User creation failed!");
             return "redirect:/register?error=internalerror";
         }
+        User newUser = userOpt.get();
 
-        log.info("Created new user: {}", newUser.getName());
+        log.info("Created new user: {}", newUser.getUsername());
 
         return "redirect:/login";
     }

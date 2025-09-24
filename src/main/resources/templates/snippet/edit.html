@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Snippet</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}" />
+    <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
+</head>
+<body>
+<div class="container mt-5" style="max-width: 600px;">
+    <h1 class="mb-4">Edit Snippet</h1>
+    <form th:action="@{'/snippets/' + ${snippet.id} + '/edit'}" method="post" class="card p-4 shadow-sm">
+        <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" class="form-control" id="title" name="title" th:value="${snippet.title}" required />
+        </div>
+        <div class="mb-3">
+            <label for="language" class="form-label">Language</label>
+            <input type="text" class="form-control" id="language" name="language" th:value="${snippet.language}" required />
+        </div>
+        <div class="mb-3">
+            <label for="content" class="form-label">Content</label>
+            <textarea class="form-control" id="content" name="content" rows="8" th:text="${snippet.content}" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+    </form>
+    <a th:href="@{'/snippets/' + ${snippet.id}}" class="btn btn-link mt-3">Back to Snippet</a>
+</div>
+</body>
+</html>
+

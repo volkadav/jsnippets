@@ -19,16 +19,12 @@ public class User {
     private Long id;
 
     @NotNull
-    private String name;
+    private String username;
 
     @NotNull
     private String email;
 
-    @Column(name = "salt")
-    @JsonIgnore
-    private String passwordSalt;
-
-    @Column(name = "hash")
+    @Column(name = "password_hash")
     @JsonIgnore
     private String passwordHash;
 

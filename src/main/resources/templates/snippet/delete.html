@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Delete Snippet</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}" />
+    <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
+</head>
+<body>
+<div class="container mt-5" style="max-width: 600px;">
+    <h1 class="mb-4 text-danger">Delete Snippet</h1>
+    <div class="alert alert-warning">
+        <strong>Are you sure you want to delete this snippet?</strong>
+        <div class="mt-2">
+            <span class="fw-bold" th:text="${snippet.title}">Snippet Title</span>
+            <span class="badge bg-secondary ms-2" th:text="${snippet.language}"></span>
+        </div>
+        <pre class="bg-light p-2 rounded border mt-2" th:text="${snippet.content}">Snippet content...</pre>
+    </div>
+    <form th:action="@{'/snippets/' + ${snippet.id} + '/delete'}" method="post">
+        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+        <a th:href="@{'/snippets/' + ${snippet.id}}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>
+</body>
+</html>
+

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>New Snippet</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}" />
+    <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
+</head>
+<body>
+<div class="container mt-5" style="max-width: 600px;">
+    <h1 class="mb-4">Create New Snippet</h1>
+    <form th:action="@{/snippets/new}" method="post" class="card p-4 shadow-sm">
+        <div class="mb-3">
+            <label for="contents" class="form-label">Snippet content</label>
+            <textarea class="form-control" id="contents" name="contents" rows="8" placeholder="Enter your update here!" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-success w-100">Create Snippet</button>
+    </form>
+    <a th:href="@{/snippets}" class="btn btn-link mt-3">Back to List</a>
+</div>
+</body>
+</html>
+

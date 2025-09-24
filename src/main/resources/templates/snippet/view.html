@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>View Snippet</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}" />
+    <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
+</head>
+<body>
+<div class="container mt-5" style="max-width: 700px;">
+    <h1 th:text="${snippet.title}" class="mb-3">Snippet Title</h1>
+    <div class="mb-2">
+        <span class="badge bg-secondary" th:text="${snippet.language}">Language</span>
+    </div>
+    <pre class="bg-light p-3 rounded border" th:text="${snippet.content}">Snippet content...</pre>
+    <div class="mt-4">
+        <a th:href="@{'/snippets/' + ${snippet.id} + '/edit'}" class="btn btn-outline-primary me-2">Edit</a>
+        <a th:href="@{'/snippets/' + ${snippet.id} + '/delete'}" class="btn btn-outline-danger me-2">Delete</a>
+        <a th:href="@{/snippets}" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
+</body>
+</html>
+
