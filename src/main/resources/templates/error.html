@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Error</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}" />
+</head>
+<body>
+<div class="container mt-5" style="max-width: 600px;">
+    <div class="alert alert-danger text-center">
+        <h1 class="display-4">Oops!</h1>
+        <p class="fs-5 text-secondary">An unexpected error occurred.</p>
+        <p th:if="${status}" class="fs-6 text-secondary">Error code: <span th:text="${status}"></span></p>
+        <p th:if="${error}" class="fs-6 text-secondary">Error: <span th:text="${error}"></span></p>
+        <p th:if="${message}" class="fs-6 text-secondary">Message: <span th:text="${message}"></span></p>
+        <a href="/" class="btn btn-primary mt-3">Return to Home</a>
+    </div>
+</div>
+<script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
+

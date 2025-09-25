@@ -62,12 +62,14 @@ public class SnippetsApi {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
     }
 
+    /* for now, disable these until auth is sorted out:
+
+
     @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Snippet> addSnippet(@RequestParam Long posterId,
                                               @RequestParam String contents) {
 
-        // todo: auth token or something to authenticate request
         User poster = users.findById(posterId).orElse(null);
         if (poster == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
@@ -96,4 +98,6 @@ public class SnippetsApi {
             log.info("someone tried to delete a snippet with id {} that doesn't exist", snippetId);
         }
     }
+
+     */
 }

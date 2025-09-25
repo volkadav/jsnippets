@@ -53,7 +53,17 @@ public class SnippetService {
         return snippetRepository.findByPosterId(posterId, pageable);
     }
 
-    public Optional<Snippet> updateSnippet(Long id, String updatedSnippetContents) {
+    public Optional<Snippet> updateSnippet(Long id, String updatedSnippetContents, User editor) {
+        if (updatedSnippetContents == null || updatedSnippetContents.trim().isEmpty()) {
+            log.warn("Attempted to update snippet with empty contents");
+            return Optional.empty();
+        }
+
+        if (!userOwnsSnippet(id, editor.getId())) {
+            log.warn("User {} attempted to update snippet {} they do not own", editor.getUsername(), id);
+            return Optional.empty();
+        }
+
         return snippetRepository.findById(id).map(existingSnippet -> {
             existingSnippet.setContents(updatedSnippetContents);
 
@@ -64,11 +74,16 @@ public class SnippetService {
         });
     }
 
-    public boolean deleteSnippet(Long id) {
-        if (snippetRepository.existsById(id)) {
+    public boolean deleteSnippet(Long id, User deleter) {
+        if (snippetRepository.existsById(id) && userOwnsSnippet(id, deleter.getId())) {
             snippetRepository.deleteById(id);
             return true;
         }
         return false;
+    }
+
+    public boolean userOwnsSnippet(Long snippetId, Long userId) {
+        Optional<Snippet> snippetOpt = snippetRepository.findById(snippetId);
+        return snippetOpt.map(snippet -> snippet.getPoster().getId().equals(userId)).orElse(false);
     }
 }
