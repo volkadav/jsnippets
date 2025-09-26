@@ -1,15 +1,15 @@
-# jsnippets - make status updating easier
+# jSnippets - make status updating easier
 
 ## history, reason for existence
 
 Once upon a time I heard about something google did internally to make
 status reporting easier, basically a small service that you'd send little
-text updates to (via cli, web ui, email, whatever) that'd be collated
-periodically for your manager to view in lieu of having to have a bunch
-of status update meetings. I've always thought that a sort of "status
-twitter" would be potentially kind of a cool thing, even if using tech
-as a hammer for social problems like communicating effectively has a
-track record that is, at best, mixed.
+text updates -- aka "snippets" -- to (via cli, web ui, email, whatever) that'd 
+be collated periodically for your manager to view in lieu of having to have a 
+bunch of status update meetings. I've always thought that a sort of "status
+twitter" would be potentially kind of a cool thing, even if using tech as a 
+hammer for social problems like communicating effectively has a track record
+that is, at best, mixed.
 
 So that ended up turning into this Spring Boot service. I'll probably
 split out a separate client repo at some point once I get the basic
