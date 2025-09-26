@@ -47,8 +47,10 @@ public class Snippets {
         }
 
         List<Snippet> snippets = snippetService.getSnippetsByPosterId(currentUser.getId(), sort);
-        log.info("Found {} snippets for user {}", snippets.size(), currentUser.getUsername());
+        long snippetCount = snippets.size();
+        log.info("Found {} snippets for user {}", snippetCount, currentUser.getUsername());
         model.addAttribute("snippets", snippets);
+        model.addAttribute("snippetCount", snippetCount);
 
         return "snippet/list";
     }

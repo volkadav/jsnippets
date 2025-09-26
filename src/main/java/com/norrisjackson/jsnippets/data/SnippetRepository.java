@@ -11,5 +11,6 @@ public interface SnippetRepository extends JpaRepository<Snippet, Long> {
     List<Snippet> findByPosterId(Long posterId);
     List<Snippet> findByPosterId(Long posterId, Sort sort);
     Page<Snippet> findByPosterId(Long posterId, Pageable pageable);
+    long countByPosterId(Long posterId);
 }
 

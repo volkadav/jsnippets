@@ -1,8 +1,8 @@
 package com.norrisjackson.jsnippets.controllers;
 
 import com.norrisjackson.jsnippets.data.User;
+import com.norrisjackson.jsnippets.services.SnippetService;
 import com.norrisjackson.jsnippets.services.UserService;
-import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,9 +17,11 @@ import java.util.Optional;
 @Slf4j
 public class Index {
     private final UserService userService;
+    private final SnippetService snippetService;
 
-    public Index(UserService userService) {
+    public Index(UserService userService, SnippetService snippetService) {
         this.userService = userService;
+        this.snippetService = snippetService;
     }
 
     @GetMapping("/")
@@ -29,9 +31,11 @@ public class Index {
         log.info("Principal: {}", principal);
 
         if (principal instanceof UserDetails authedUser) {
-            Optional<User> userOpt = userService.getUserByUsername(authedUser.getUsername());
+            Optional<User> userOpt = userService.getUserByUsername(
+                    authedUser.getUsername());
             if (userOpt.isEmpty()) {
-                log.error("Authenticated user not found in database: {}", authedUser.getUsername());
+                log.error("Authenticated user not found in database: {}",
+                        authedUser.getUsername());
                 return "redirect:/logout";
             }
             User user = userOpt.get();
@@ -40,6 +44,8 @@ public class Index {
                     user.getUsername() + "!");
             model.addAttribute("username", user.getUsername());
             model.addAttribute("email", user.getEmail());
+            model.addAttribute("snippetCount",
+                    snippetService.getSnippetCountByPosterId(user.getId()));
         }
 
         return "index";

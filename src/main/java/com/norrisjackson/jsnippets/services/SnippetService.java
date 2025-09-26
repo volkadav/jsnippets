@@ -50,6 +50,10 @@ public class SnippetService {
         return snippetRepository.findByPosterId(posterId);
     }
 
+    public long getSnippetCountByPosterId(Long posterId) {
+        return snippetRepository.countByPosterId(posterId);
+    }
+
     public List<Snippet> getSnippetsByPosterId(Long posterId, Sort sort) {
         return snippetRepository.findByPosterId(posterId, sort);
     }
