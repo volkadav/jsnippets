@@ -32,7 +32,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(
                 requests -> requests
                     .requestMatchers("/", "/login", "/register",
-                            "/webjars/**", "/css/**", "/js/**", "/images/**").permitAll()
+                            "/webjars/**", "/css/**", "/js/**", "/images/**",
+                            "/favicon.ico").permitAll()
                     .anyRequest().authenticated())
             .userDetailsService(userDetailsService)
         .csrf(AbstractHttpConfigurer::disable); // disable CSRF for simplicity (not recommended for production)
