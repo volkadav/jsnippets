@@ -4,6 +4,7 @@ import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.SnippetRepository;
 import com.norrisjackson.jsnippets.data.User;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
@@ -47,6 +48,10 @@ public class SnippetService {
 
     public List<Snippet> getSnippetsByPosterId(Long posterId) {
         return snippetRepository.findByPosterId(posterId);
+    }
+
+    public List<Snippet> getSnippetsByPosterId(Long posterId, Sort sort) {
+        return snippetRepository.findByPosterId(posterId, sort);
     }
 
     public Page<Snippet> getSnippetsByPosterId(Long posterId, Pageable pageable) {

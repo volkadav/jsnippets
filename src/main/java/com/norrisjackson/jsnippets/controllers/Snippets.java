@@ -5,6 +5,7 @@ import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.SnippetService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,14 +26,28 @@ public class Snippets {
 
     // List all snippets
     @GetMapping("/snippets")
-    String snippets(Model model) {
+    String snippets(@RequestParam(name = "sort", required = false) String sortDir, Model model) {
         User currentUser = (User) model.getAttribute("currentUser");
         if (currentUser == null) {
             log.warn("No current user found in model");
             return "redirect:/login";
         }
 
-        List<Snippet> snippets = snippetService.getSnippetsByPosterId(currentUser.getId());
+        Sort sort = Sort.by("editedAt");
+        if (sortDir == null || sortDir.isBlank()) {
+            sortDir = "desc";
+        } else {
+            sortDir = sortDir.toLowerCase();
+        }
+        model.addAttribute("sortDir", sortDir);
+        if (sortDir.equals("asc")) {
+            sort = sort.ascending();
+        } else {
+            sort = sort.descending();
+        }
+
+        List<Snippet> snippets = snippetService.getSnippetsByPosterId(currentUser.getId(), sort);
+        log.info("Found {} snippets for user {}", snippets.size(), currentUser.getUsername());
         model.addAttribute("snippets", snippets);
 
         return "snippet/list";

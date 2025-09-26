@@ -8,13 +8,20 @@
 </head>
 <body>
 <div class="container mt-5">
-    <h1 class="mb-4">Your Snippets</h1>
+    <h1 class="mb-4">Your Snippets
+        <span class="ms-2">
+            <a th:if="${sortDir} == 'asc'" th:href="@{'/snippets?sort=desc'}" class="text-decoration-none" title="Sort descending">&#x25BC;</a>
+            <a th:if="${sortDir} == 'desc'" th:href="@{'/snippets?sort=asc'}" class="text-decoration-none" title="Sort ascending">&#x25B2;</a>
+            <a th:if="${sortDir} == null or (${sortDir} != 'asc' and ${sortDir} != 'desc')" th:href="@{'/snippets?sort=desc'}" class="text-decoration-none" title="Sort descending">&#x25BC;</a>
+        </span>
+    </h1>
+    <p class="mb-4 text-secondary">Here are all your snippets. You can create, edit, or delete them as you wish.</p>
     <a th:href="@{/snippets/new}" class="btn btn-success mb-3">New Snippet</a>
     <div th:if="${snippets != null && #lists.isEmpty(snippets)}" class="alert alert-info">No snippets found.</div>
     <ul class="list-group">
         <li class="list-group-item d-flex justify-content-between align-items-center" th:each="snippet : ${snippets}">
             <span>
-                <a th:href="@{'/snippets/' + ${snippet.id}}" th:text="${snippet.id} + ' @ ' + ${snippet.editedAt}"></a>
+                <a th:href="@{'/snippets/' + ${snippet.id}}" th:text="${snippet.editedAt}"></a>
                 <span class="text-muted small ms-2" th:text="${snippet.contents}"></span>
             </span>
             <span>
@@ -23,7 +30,7 @@
             </span>
         </li>
     </ul>
+    <a th:href="@{'/'}" class="btn btn-success mb-3">Home</a>
 </div>
 </body>
 </html>
-
