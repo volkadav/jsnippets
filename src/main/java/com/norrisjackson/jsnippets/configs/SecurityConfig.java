@@ -35,8 +35,7 @@ public class SecurityConfig {
                             "/webjars/**", "/css/**", "/js/**", "/images/**",
                             "/favicon.ico").permitAll()
                     .anyRequest().authenticated())
-            .userDetailsService(userDetailsService)
-        .csrf(AbstractHttpConfigurer::disable); // disable CSRF for simplicity (not recommended for production)
+            .userDetailsService(userDetailsService);
         return http.build();
     }
 }

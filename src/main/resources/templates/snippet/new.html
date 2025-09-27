@@ -10,6 +10,7 @@
 <div class="container mt-5" style="max-width: 600px;">
     <h1 class="mb-4">Create New Snippet</h1>
     <form th:action="@{/snippets/new}" method="post" class="card p-4 shadow-sm">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
         <div class="mb-3">
             <label for="contents" class="form-label">Snippet content</label>
             <textarea class="form-control" id="contents" name="contents" rows="8" placeholder="Enter your update here!" required></textarea>
@@ -20,4 +21,3 @@
 </div>
 </body>
 </html>
-
