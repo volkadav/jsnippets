@@ -10,9 +10,9 @@
 <div class="container mt-5">
     <h1 class="mb-4">Your Snippets <span class="text-muted fs-6">(<span th:text="${snippetCount}">0</span>)</span>
         <span class="ms-2">
-            <a th:if="${sortDir} == 'asc'" th:href="@{'/snippets?sort=desc'}" class="text-decoration-none" title="Sort descending">&#x25BC;</a>
-            <a th:if="${sortDir} == 'desc'" th:href="@{'/snippets?sort=asc'}" class="text-decoration-none" title="Sort ascending">&#x25B2;</a>
-            <a th:if="${sortDir} == null or (${sortDir} != 'asc' and ${sortDir} != 'desc')" th:href="@{'/snippets?sort=desc'}" class="text-decoration-none" title="Sort descending">&#x25BC;</a>
+            <a th:if="${sortDir} == 'asc'" th:href="@{'/snippets?sort=desc'}" class="text-decoration-none" title="Sort by create/edit time descending">&#x25BC;</a>
+            <a th:if="${sortDir} == 'desc'" th:href="@{'/snippets?sort=asc'}" class="text-decoration-none" title="Sort by create/edit time ascending">&#x25B2;</a>
+            <a th:if="${sortDir} == null or (${sortDir} != 'asc' and ${sortDir} != 'desc')" th:href="@{'/snippets?sort=desc'}" class="text-decoration-none" title="Sort by create/edit time descending">&#x25BC;</a>
         </span>
     </h1>
     <p class="mb-4 text-secondary">Here are all your snippets. You can create, edit, or delete them as you wish.</p>
