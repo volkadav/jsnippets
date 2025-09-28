@@ -4,10 +4,10 @@
 
 Once upon a time I heard about something google did internally to make
 status reporting easier, basically a small service that you'd send little
-text updates -- aka "snippets" -- to (via cli, web ui, email, whatever) that'd 
-be collated periodically for your manager to view in lieu of having to have a 
+text updates -- aka "snippets" -- to (via cli, web ui, email, whatever) that'd
+be collated periodically for your manager to view in lieu of having to have a
 bunch of status update meetings. I've always thought that a sort of "status
-twitter" would be potentially kind of a cool thing, even if using tech as a 
+twitter" would be potentially kind of a cool thing, even if using tech as a
 hammer for social problems like communicating effectively has a track record
 that is, at best, mixed.
 
@@ -17,9 +17,8 @@ web ui and rest api stood up.
 
 ## outstanding TODOs
 
-- finish web ui
-- finish rest api
-- particularly, sort out api auth
+- api docs for api (auto-generated?)
+- basic follower mechanics
 - start email support (periodic reports? submission via email?)
 
 ## future work ideas
