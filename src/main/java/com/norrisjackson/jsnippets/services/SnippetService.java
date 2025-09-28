@@ -95,4 +95,12 @@ public class SnippetService {
         Optional<Snippet> snippetOpt = snippetRepository.findById(snippetId);
         return snippetOpt.map(snippet -> snippet.getPoster().getId().equals(userId)).orElse(false);
     }
+
+    public Optional<Snippet> retrieveSnippetForUser(Long snippetId, Long userId) {
+        Optional<Snippet> snippetOpt = snippetRepository.findById(snippetId);
+        if (snippetOpt.isPresent() && userOwnsSnippet(snippetId, userId)) {
+            return snippetOpt;
+        }
+        return Optional.empty();
+    }
 }
