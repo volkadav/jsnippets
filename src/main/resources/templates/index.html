@@ -20,10 +20,21 @@
                 <h2 class="h5 mt-3">Actions</h2>
                 <ul class="list-group mb-3">
                     <li class="list-group-item">
+                        <p class="lead">Recent Snippets:</p>
+                        <ul>
+                            <li th:if="${recentSnippets == null or recentSnippets.empty}">You have no recent snippets.</li>
+                            <li th:each="snippet : ${recentSnippets}">
+                                <a th:href="@{'/snippets/' + ${snippet.id}}" th:text="${#strings.length(snippet.contents) > 30 ? #strings.substring(snippet.contents, 0, 30) + '...' : snippet.contents}">Snippet content</a>
+                                @ <span th:text="${#dates.format(snippet.editedAt, 'yyyy-MM-dd HH:mm')}">Creation/Last edit date/time</span>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="list-group-item">
                         <a th:href="@{/snippets/new}" class="btn btn-success mb-3">Create a new snippet</a></li>
                     <li class="list-group-item">
-                        <a th:href="@{/snippets}" class="btn btn-success mb-3" th:text="@{'View your snippets (' + ${snippetCount} + ')'}">View your snippets</a></li>
+                        <a th:href="@{/snippets}" class="btn btn-success mb-3" th:text="@{'View all snippets (' + ${snippetCount} + ')'}">View all of your snippets</a></li>
                 </ul>
+                
                 <form th:action="@{/logout}" method="post">
                     <button type="submit" class="btn btn-outline-danger">Log out</button>
                 </form>

@@ -1,9 +1,13 @@
 package com.norrisjackson.jsnippets.controllers;
 
+import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.SnippetService;
 import com.norrisjackson.jsnippets.services.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -46,6 +51,11 @@ public class Index {
             model.addAttribute("email", user.getEmail());
             model.addAttribute("snippetCount",
                     snippetService.getSnippetCountByPosterId(user.getId()));
+            
+            // Get the 10 most recent snippets for the user
+            Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "editedAt"));
+            List<Snippet> recentSnippets = snippetService.getSnippetsByPosterId(user.getId(), pageable).getContent();
+            model.addAttribute("recentSnippets", recentSnippets);
         }
 
         return "index";
