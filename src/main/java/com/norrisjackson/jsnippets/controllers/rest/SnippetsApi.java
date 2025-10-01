@@ -4,6 +4,9 @@ import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.SnippetService;
 import com.norrisjackson.jsnippets.services.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -19,10 +22,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
-
 @RestController
 @RequestMapping(path = "/api/snippets", produces = "application/json")
 @Slf4j
+@Tag(name = "Snippets", description = "Operations related to JSnippets snippet data")
 public class SnippetsApi {
     private final SnippetService snippetService;
     private final UserService userService;
@@ -54,10 +57,11 @@ public class SnippetsApi {
     }
 
     @GetMapping
+    @Operation(summary = "Get paginated list of snippets for the authenticated user")
     public ResponseEntity<Page<Snippet>> findAllForUser(
                                      @AuthenticationPrincipal UserDetails authedUser,
-                                     @RequestParam("pageNumber") Optional<Integer> pageNumber,
-                                     @RequestParam("pageSize") Optional<Integer> pageSize) {
+                                     @Parameter(description = "Page number") @RequestParam("pageNumber") Optional<Integer> pageNumber,
+                                     @Parameter(description = "Page size") @RequestParam("pageSize") Optional<Integer> pageSize) {
         UserOrError userOrError = getCurrentUserOrError(authedUser);
         if (userOrError.hasError()) return (ResponseEntity<Page<Snippet>>) userOrError.errorResponse;
         User currentUser = userOrError.user;
@@ -70,8 +74,9 @@ public class SnippetsApi {
     }
 
     @GetMapping("/{snippetId}")
+    @Operation(summary = "Get a specific snippet by ID for the authenticated user")
     public ResponseEntity<Snippet> findById(@AuthenticationPrincipal UserDetails authedUser,
-                                            @PathVariable("snippetId") Long snippetId) {
+                                            @Parameter(description = "Snippet ID") @PathVariable("snippetId") Long snippetId) {
         UserOrError userOrError = getCurrentUserOrError(authedUser);
         if (userOrError.hasError()) return (ResponseEntity<Snippet>) userOrError.errorResponse;
         User currentUser = userOrError.user;
@@ -83,8 +88,9 @@ public class SnippetsApi {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @Operation(summary = "Create a new snippet for the authenticated user")
     public ResponseEntity<Snippet> addSnippet(@AuthenticationPrincipal UserDetails authedUser,
-                                              @RequestParam String contents) {
+                                              @Parameter(description = "Snippet text contents") @RequestParam String contents) {
         UserOrError userOrError = getCurrentUserOrError(authedUser);
         if (userOrError.hasError()) return (ResponseEntity<Snippet>) userOrError.errorResponse;
         User currentUser = userOrError.user;
@@ -100,15 +106,16 @@ public class SnippetsApi {
     }
 
     @PatchMapping(path = "/{snippetId}", consumes = "application/json")
+    @Operation(summary = "Edit an existing snippet by ID for the authenticated user")
     public ResponseEntity<Snippet> editSnippet(@AuthenticationPrincipal UserDetails authedUser,
-                                               @PathVariable("snippetId") Long snippetId,
-                                               @RequestBody Snippet snippetNew) {
+                                               @Parameter(description = "Snippet ID") @PathVariable("snippetId") Long snippetId,
+                                               @Parameter(description = "New snippet text content") @RequestParam String newContents) {
 
         UserOrError userOrError = getCurrentUserOrError(authedUser);
         if (userOrError.hasError()) return (ResponseEntity<Snippet>) userOrError.errorResponse;
         User currentUser = userOrError.user;
 
-        if (Strings.isBlank(snippetNew.getContents())) {
+        if (Strings.isBlank(newContents)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
@@ -116,14 +123,15 @@ public class SnippetsApi {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
 
-        Optional<Snippet> updated = snippetService.updateSnippet(snippetId, snippetNew.getContents(), currentUser);
+        Optional<Snippet> updated = snippetService.updateSnippet(snippetId, newContents, currentUser);
         return updated.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null));
     }
 
     @DeleteMapping("/{snippetId}")
+    @Operation(summary = "Delete a snippet by ID for the authenticated user")
     public ResponseEntity<Void> deleteSnippet(@AuthenticationPrincipal UserDetails authedUser,
-                                              @PathVariable Long snippetId) {
+                                              @Parameter(description = "Snippet ID") @PathVariable Long snippetId) {
         UserOrError userOrError = getCurrentUserOrError(authedUser);
         if (userOrError.hasError()) {
             return (ResponseEntity<Void>) userOrError.errorResponse;
