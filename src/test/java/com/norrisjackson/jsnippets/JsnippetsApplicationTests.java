@@ -80,7 +80,7 @@ class JsnippetsApplicationTests {
 	}
 
 	@Test
-	void integrationTests() {
+	void apiIntegrationTests() {
 		// Authenticate as Alice
 		TestRestTemplate aliceRest = restTemplate.withBasicAuth("alice", "password");
 		// List Alice's snippets
@@ -108,10 +108,11 @@ class JsnippetsApplicationTests {
 
 		// Edit the new snippet
 		Long newSnippetId = createResp.getBody().getId();
-		Snippet editPayload = new Snippet();
-		editPayload.setContents("Edited snippet for Alice");
-		HttpEntity<Snippet> editReq = new HttpEntity<>(editPayload);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String jsonBody = "{\"contents\": \"Edited snippet for Alice\"}";
+        HttpEntity<String> editReq = new HttpEntity<>(jsonBody, headers);
 		Snippet editResp = aliceRest.patchForObject("/api/snippets/" + newSnippetId, editReq, Snippet.class);
+        assertNotNull(editResp);
 		assertEquals("Edited snippet for Alice", editResp.getContents());
 
 		// Delete the new snippet

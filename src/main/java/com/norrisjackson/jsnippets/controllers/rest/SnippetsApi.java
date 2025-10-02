@@ -20,6 +20,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -107,15 +108,18 @@ public class SnippetsApi {
 
     @PatchMapping(path = "/{snippetId}", consumes = "application/json")
     @Operation(summary = "Edit an existing snippet by ID for the authenticated user")
-    public ResponseEntity<Snippet> editSnippet(@AuthenticationPrincipal UserDetails authedUser,
-                                               @Parameter(description = "Snippet ID") @PathVariable("snippetId") Long snippetId,
-                                               @Parameter(description = "New snippet text content") @RequestParam String newContents) {
+    public ResponseEntity<Snippet> editSnippet(
+            @AuthenticationPrincipal UserDetails authedUser,
+            @Parameter(description = "Snippet ID") @PathVariable("snippetId") Long snippetId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON body with fields to update")
+            @RequestBody Map<String, String> updates) {
 
         UserOrError userOrError = getCurrentUserOrError(authedUser);
         if (userOrError.hasError()) return (ResponseEntity<Snippet>) userOrError.errorResponse;
         User currentUser = userOrError.user;
 
-        if (Strings.isBlank(newContents)) {
+        String newContents = updates.get("contents");
+        if (newContents == null || newContents.isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 

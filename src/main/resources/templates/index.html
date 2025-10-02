@@ -11,7 +11,7 @@
         <h1 class="mb-4">jSnippets <small class="text-muted">status reporting, simplified</small></h1>
         <p th:if="${greeting}" th:text="${greeting}" class="alert alert-info"></p>
         <p th:unless="${greeting}" class="alert alert-secondary">Welcome, guest! Please
-            <a th:href="@{/login}" class="btn btn-link p-0">login</a> or
+            <a th:href="@{/login}" class="btn btn-link p-0">log in</a> or
             <a th:href="@{/register}" class="btn btn-link p-0">register an account</a>.
         </p>
         <div th:if="${username}" class="card mt-4">
