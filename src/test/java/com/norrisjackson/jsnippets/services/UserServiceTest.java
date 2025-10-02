@@ -45,6 +45,7 @@ class UserServiceTest {
         testUser.setEmail(testEmail);
         testUser.setPasswordHash(encodedPassword);
         testUser.setCreatedAt(new Date());
+        testUser.setTimezone("America/New_York");
     }
 
     @Test
@@ -225,5 +226,22 @@ class UserServiceTest {
                 .isInstanceOf(UsernameNotFoundException.class)
                 .hasMessageContaining("User not found");
         verify(userRepository).findByUsername(testUsername);
+    }
+
+    @Test
+    void updateUser_WhenValidUser_ReturnsUpdatedUser() {
+        // Given
+        testUser.setEmail("newemail@example.com");
+        testUser.setTimezone("Europe/London");
+        when(userRepository.save(testUser)).thenReturn(testUser);
+
+        // When
+        User result = userService.updateUser(testUser);
+
+        // Then
+        assertThat(result).isEqualTo(testUser);
+        assertThat(result.getEmail()).isEqualTo("newemail@example.com");
+        assertThat(result.getTimezone()).isEqualTo("Europe/London");
+        verify(userRepository).save(testUser);
     }
 }

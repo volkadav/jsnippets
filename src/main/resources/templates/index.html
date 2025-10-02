@@ -16,25 +16,26 @@
         </p>
         <div th:if="${username}" class="card mt-4">
             <div class="card-body">
-                <p>Your registered email is <span th:text="${email}" class="fw-bold"></span>.</p>
+                <div th:if="${recentSnippets != null and !recentSnippets.empty}" class="mt-4">
+                    <h2 class="h5 mt-3">Your Recent Snippets</h2>
+                    <ul>
+                        <li th:if="${recentSnippets == null or recentSnippets.empty}">You have no recent snippets.</li>
+                        <li th:each="snippet : ${recentSnippets}">
+                            <a th:href="@{'/snippets/' + ${snippet.id}}" th:text="${#strings.length(snippet.contents) > 30 ? #strings.substring(snippet.contents, 0, 30) + '...' : snippet.contents}">Snippet content</a>
+                            @ <span th:text="${#dates.format(snippet.editedAt, 'yyyy-MM-dd HH:mm')}">Creation/Last edit date/time</span>
+                        </li>
+                    </ul>
+                </div>
                 <h2 class="h5 mt-3">Actions</h2>
                 <ul class="list-group mb-3">
                     <li class="list-group-item">
-                        <p class="lead">Recent Snippets:</p>
-                        <ul>
-                            <li th:if="${recentSnippets == null or recentSnippets.empty}">You have no recent snippets.</li>
-                            <li th:each="snippet : ${recentSnippets}">
-                                <a th:href="@{'/snippets/' + ${snippet.id}}" th:text="${#strings.length(snippet.contents) > 30 ? #strings.substring(snippet.contents, 0, 30) + '...' : snippet.contents}">Snippet content</a>
-                                @ <span th:text="${#dates.format(snippet.editedAt, 'yyyy-MM-dd HH:mm')}">Creation/Last edit date/time</span>
-                            </li>
-                        </ul>
-                    </li>
+                        <a th:href="@{/snippets/new}" class="btn btn-success mb-3">Create New Snippet</a></li>
                     <li class="list-group-item">
-                        <a th:href="@{/snippets/new}" class="btn btn-primary mb-3">Create a new snippet</a></li>
+                        <a th:href="@{/snippets}" class="btn btn-primary mb-3" th:text="@{'View your snippets (' + ${snippetCount} + ')'}">View your snippets</a></li>
                     <li class="list-group-item">
-                        <a th:href="@{/snippets}" class="btn btn-primary mb-3" th:text="@{'View all snippets (' + ${snippetCount} + ')'}">View all of your snippets</a></li>
+                        <a th:href="@{/profile}" class="btn btn-primary mb-3">Profile Settings</a></li>
                 </ul>
-                
+
                 <form th:action="@{/logout}" method="post">
                     <button type="submit" class="btn btn-outline-danger">Log out</button>
                 </form>

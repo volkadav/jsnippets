@@ -36,4 +36,7 @@ public class User {
     @Column(name = "last_login")
     @JsonIgnore
     private Date lastLoggedInAt;
+
+    @Column(name = "timezone")
+    private String timezone = "UTC"; // Default to UTC, stores IANA timezone identifier
 }

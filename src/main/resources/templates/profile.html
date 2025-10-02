@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile Settings - JSnippets</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}" />
+    <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
+</head>
+<body>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="mb-4">Profile Settings</h1>
+            
+            <!-- Success/Error messages -->
+            <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}">
+                Success message
+            </div>
+            <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}">
+                Error message
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">Account Information</h3>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/profile}" method="post">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" 
+                                   th:value="${user.username}" readonly disabled>
+                            <div class="form-text">Username cannot be changed.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   th:value="${user.email}" required>
+                            <div class="form-text">Your email address for account notifications.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="timezone" class="form-label">Time Zone</label>
+                            <select class="form-select" id="timezone" name="timezone" required>
+                                <option value="">Select your timezone...</option>
+                                <option th:each="tz : ${availableTimezones}" 
+                                        th:value="${tz}" 
+                                        th:text="${tz}"
+                                        th:selected="${tz == user.timezone}">
+                                    Timezone
+                                </option>
+                            </select>
+                            <div class="form-text">
+                                This will be used to display times in your local timezone. 
+                                Current timezone: <span th:text="${user.timezone}">UTC</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                            <a th:href="@{/}" class="btn btn-secondary ms-2">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">Account Statistics</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <strong>Member since:</strong><br>
+                            <span th:text="${timezoneService.formatDateInUserTimezone(user.createdAt, user.timezone, 'MMMM dd, yyyy')}">Date joined</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <strong>Last login:</strong><br>
+                            <span th:if="${user.lastLoggedInAt}" 
+                                  th:text="${timezoneService.formatDateInUserTimezone(user.lastLoggedInAt, user.timezone)}">
+                                Last login date
+                            </span>
+                            <span th:unless="${user.lastLoggedInAt}" class="text-muted">Never</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br/>
+            <a th:href="@{'/'}" class="btn btn-primary mb-3">Home</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

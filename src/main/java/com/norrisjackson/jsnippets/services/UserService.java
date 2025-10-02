@@ -57,6 +57,10 @@ public class UserService implements UserDetailsService {
         return userRepository.findByUsername(username);
     }
 
+    public User updateUser(User user) {
+        return userRepository.save(user);
+    }
+
     @Override
     public UserDetails loadUserByUsername(String username) {
         Optional<User> user = userRepository.findByUsername(username);
