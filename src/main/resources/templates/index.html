@@ -30,9 +30,9 @@
                         </ul>
                     </li>
                     <li class="list-group-item">
-                        <a th:href="@{/snippets/new}" class="btn btn-success mb-3">Create a new snippet</a></li>
+                        <a th:href="@{/snippets/new}" class="btn btn-primary mb-3">Create a new snippet</a></li>
                     <li class="list-group-item">
-                        <a th:href="@{/snippets}" class="btn btn-success mb-3" th:text="@{'View all snippets (' + ${snippetCount} + ')'}">View all of your snippets</a></li>
+                        <a th:href="@{/snippets}" class="btn btn-primary mb-3" th:text="@{'View all snippets (' + ${snippetCount} + ')'}">View all of your snippets</a></li>
                 </ul>
                 
                 <form th:action="@{/logout}" method="post">
