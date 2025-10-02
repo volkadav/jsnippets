@@ -17,7 +17,6 @@ web ui and rest api stood up.
 
 ## outstanding TODOs
 
-- api docs for api (auto-generated?)
 - basic follower mechanics
 - start email support (periodic reports? submission via email?)
 
@@ -26,21 +25,37 @@ web ui and rest api stood up.
 - integrate with ticket systems like jira?
 - fancier web reporting ui to view updates along an org chart tree?
 
+## package
+
+### executable jar
+
+`mvn clean package`
+
+find jar file in `target/jsnippets-{version}.jar`
+
+### container image
+
+`mvn clean spring-boot:build-image`
+
+produces `norrisjackson.com/jsnippets:latest` locally, suitable for
+export/running in docker/podman/k8s/etc.
+
 ## run
 
 - make jsnippets pgsql user and db it is owner of
 - use env vars to set PG_HOST, PG_PORT, PG_DB, PG_USER, PG_PASS
-- execute: java -jar path/to/jsnippets.jar
+- execute: java -jar path/to/jsnippets.jar (for an executable jar) or
+whatever container magic you prefer to run the containerized version
 
 ## run requirements
 
-- jre 21
+- jre 17+ (tested with 21)
 - postgresql (anything recent, say 10+)
 - mail server (optional)
 
 ## build requirements
 
-- jdk 21
+- jdk 17+ (tested with 21)
 - maven 3
 
 ## license
