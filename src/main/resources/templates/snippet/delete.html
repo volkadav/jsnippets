@@ -16,10 +16,10 @@
         </div>
         <p class="bg-light p-2 rounded border mt-2" th:text="${snippet.contents}">Snippet contents...</p>
     </div>
-    <form th:action="@{'/snippets/' + ${snippet.id} + '/delete'}" method="post">
+    <form th:action="@{'/snippet/{id}/delete'(id=${snippet.id})}" method="post">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
         <button type="submit" class="btn btn-danger">Yes, Delete</button>
-        <a th:href="@{'/snippets/' + ${snippet.id}}" class="btn btn-secondary ms-2">Cancel</a>
+        <a th:href="@{'/snippet/' + ${snippet.id}}" class="btn btn-secondary ms-2">Cancel</a>
     </form>
 </div>
 </body>

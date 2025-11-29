@@ -244,4 +244,78 @@ class UserServiceTest {
         assertThat(result.getTimezone()).isEqualTo("Europe/London");
         verify(userRepository).save(testUser);
     }
+
+    @Test
+    void testFollowUser() {
+        User follower = new User();
+        follower.setId(1L);
+        follower.setUsername("follower");
+
+        User toFollow = new User();
+        toFollow.setId(2L);
+        toFollow.setUsername("toFollow");
+
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        boolean result = userService.followUser(follower, toFollow);
+
+        assertThat(result).isTrue();
+        assertThat(follower.getFollowedUsers()).contains(toFollow);
+        verify(userRepository, times(1)).save(follower);
+    }
+
+    @Test
+    void testFollowUserAlreadyFollowing() {
+        User follower = new User();
+        follower.setId(1L);
+        follower.setUsername("follower");
+
+        User toFollow = new User();
+        toFollow.setId(2L);
+        toFollow.setUsername("toFollow");
+
+        follower.getFollowedUsers().add(toFollow);
+
+        boolean result = userService.followUser(follower, toFollow);
+
+        assertThat(result).isFalse();
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testUnfollowUser() {
+        User follower = new User();
+        follower.setId(1L);
+        follower.setUsername("follower");
+
+        User toUnfollow = new User();
+        toUnfollow.setId(2L);
+        toUnfollow.setUsername("toUnfollow");
+
+        follower.getFollowedUsers().add(toUnfollow);
+
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        boolean result = userService.unfollowUser(follower, toUnfollow);
+
+        assertThat(result).isTrue();
+        assertThat(follower.getFollowedUsers()).doesNotContain(toUnfollow);
+        verify(userRepository, times(1)).save(follower);
+    }
+
+    @Test
+    void testUnfollowUserNotFollowing() {
+        User follower = new User();
+        follower.setId(1L);
+        follower.setUsername("follower");
+
+        User toUnfollow = new User();
+        toUnfollow.setId(2L);
+        toUnfollow.setUsername("toUnfollow");
+
+        boolean result = userService.unfollowUser(follower, toUnfollow);
+
+        assertThat(result).isFalse();
+        verify(userRepository, never()).save(any(User.class));
+    }
 }

@@ -14,6 +14,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,8 +31,10 @@ public class Index {
         this.snippetService = snippetService;
     }
 
-    @GetMapping("/")
-    public String index(Model model) {
+    @GetMapping({"/", "/index"})
+    public String index(@RequestParam(required = false) Integer page,
+                        @RequestParam(required = false) Integer size,
+                        Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Object principal = auth.getPrincipal();
         log.info("Principal: {}", principal);
@@ -48,12 +52,15 @@ public class Index {
             model.addAttribute("greeting", "Welcome, " +
                     user.getUsername() + "!");
             model.addAttribute("username", user.getUsername());
-            model.addAttribute("email", user.getEmail());
             model.addAttribute("snippetCount",
                     snippetService.getSnippetCountByPosterId(user.getId()));
-            
-            // Get the 10 most recent snippets for the user
-            Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "editedAt"));
+
+            if (page == null || page < 0) page = 0;
+            if (size == null || size <= 0) size = 25;
+            model.addAttribute("currentPage", page);
+            model.addAttribute("pageSize", size);
+
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "editedAt"));
             List<Snippet> recentSnippets = snippetService.getSnippetsByPosterId(user.getId(), pageable).getContent();
             model.addAttribute("recentSnippets", recentSnippets);
         }

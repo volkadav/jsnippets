@@ -2,34 +2,36 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Your Snippets</title>
+    <title th:text="@{'Snippets Timeline for ' + ${viewUser.username}}">Snippets Timeline</title>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css}" />
     <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
 </head>
 <body>
 <div class="container mt-5">
-    <h1 class="mb-4">Your Snippets <span class="text-muted fs-6">(<span th:text="${snippetCount}">0</span>)</span>
+    <h1 class="mb-4">Snippets Timeline for <span th:text="${viewUser.username}"></span> <span class="text-muted fs-6">(<span th:text="${snippetCount}">0</span>)</span>
         <span class="ms-2">
             <a th:if="${sortDir} == 'asc'" th:href="@{'/snippets?sort=desc'}" class="text-decoration-none" title="Sort by create/edit time descending">&#x25BC;</a>
             <a th:if="${sortDir} == 'desc'" th:href="@{'/snippets?sort=asc'}" class="text-decoration-none" title="Sort by create/edit time ascending">&#x25B2;</a>
             <a th:if="${sortDir} == null or (${sortDir} != 'asc' and ${sortDir} != 'desc')" th:href="@{'/snippets?sort=desc'}" class="text-decoration-none" title="Sort by create/edit time descending">&#x25BC;</a>
         </span>
     </h1>
-    <p class="mb-4 text-secondary">Here are all your snippets. You can create, edit, or delete them as you wish.</p>
-    <a th:href="@{/snippets/new}" class="btn btn-success mb-3">New Snippet</a>
+    <p class="mb-4 text-secondary" th:if="${authUser.id == viewUser.id}">Here are all your snippets. You can create, edit, or delete them as you wish.</p>
+    <a th:href="@{/snippets/new}" class="btn btn-success mb-3" th:if="${authUser.id == viewUser.id}">New Snippet</a>
+    <a th:href="@{'/profile/{user}'(user=${viewUser.username})}" class="btn btn-success mb-3" th:if="${authUser.id != viewUser.id}">View Profile</a>
     <div th:if="${snippets != null && #lists.isEmpty(snippets)}" class="alert alert-info">No snippets found.</div>
     <ul class="list-group">
         <li class="list-group-item d-flex justify-content-between align-items-center" th:each="snippet : ${snippets}">
             <span>
-                <a th:href="@{'/snippets/' + ${snippet.id}}" th:text="${timezoneService.formatDateInUserTimezone(snippet.editedAt, currentUser.timezone)}"></a>
+                <a th:href="@{'/snippet/' + ${snippet.id}}" th:text="${timezoneService.formatDateInUserTimezone(snippet.editedAt, currentUser.timezone)}"></a>
                 <span class="text-muted small ms-2" th:text="${snippet.contents}"></span>
             </span>
-            <span>
-                <a th:href="@{'/snippets/' + ${snippet.id} + '/edit'}" class="btn btn-sm btn-outline-primary me-2">Edit</a>
-                <a th:href="@{'/snippets/' + ${snippet.id} + '/delete'}" class="btn btn-sm btn-outline-danger">Delete</a>
+            <span th:if="${authUser.id == viewUser.id}">
+                <a th:href="@{'/snippet/' + ${snippet.id} + '/edit'}" class="btn btn-sm btn-outline-primary me-2">Edit</a>
+                <a th:href="@{'/snippet/' + ${snippet.id} + '/delete'}" class="btn btn-sm btn-outline-danger">Delete</a>
             </span>
         </li>
     </ul>
+    <br/>
     <a th:href="@{'/'}" class="btn btn-primary mb-3">Home</a>
 </div>
 </body>

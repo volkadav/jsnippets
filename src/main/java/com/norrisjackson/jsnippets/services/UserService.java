@@ -61,6 +61,31 @@ public class UserService implements UserDetailsService {
         return userRepository.save(user);
     }
 
+    public boolean followUser(User follower, User toFollow) {
+        if (follower.equals(toFollow)) {
+            return false; // Cannot follow oneself
+        }
+        if (follower.getFollowedUsers().contains(toFollow)) {
+            return false; // Already following
+        }
+
+        follower.getFollowedUsers().add(toFollow);
+        userRepository.save(follower);
+
+        return true;
+    }
+
+    public boolean unfollowUser(User follower, User toUnfollow) {
+        if (!follower.getFollowedUsers().contains(toUnfollow)) {
+            return false; // Not following
+        }
+
+        follower.getFollowedUsers().remove(toUnfollow);
+        userRepository.save(follower);
+
+        return true;
+    }
+
     @Override
     public UserDetails loadUserByUsername(String username) {
         Optional<User> user = userRepository.findByUsername(username);

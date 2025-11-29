@@ -12,8 +12,8 @@
     <p class="p-3" th:text="${snippet.contents}">snippet contents</p>
     <p class="fs-6 text-secondary" th:text="${snippet.poster.username} + ' @ ' + ${timezoneService.formatDateInUserTimezone(snippet.editedAt, currentUser.timezone)}">snippet metadata</p>
     <div class="mt-4">
-        <a th:href="@{'/snippets/' + ${snippet.id} + '/edit'}" class="btn btn-outline-primary me-2">Edit</a>
-        <a th:href="@{'/snippets/' + ${snippet.id} + '/delete'}" class="btn btn-outline-danger me-2">Delete</a>
+        <a th:if="${isOwner}" th:href="@{'/snippet/' + ${snippet.id} + '/edit'}" class="btn btn-outline-primary me-2">Edit</a>
+        <a th:if="${isOwner}" th:href="@{'/snippet/' + ${snippet.id} + '/delete'}" class="btn btn-outline-danger me-2">Delete</a>
         <a th:href="@{/snippets}" class="btn btn-secondary">Back to List</a>
     </div>
 </div>
