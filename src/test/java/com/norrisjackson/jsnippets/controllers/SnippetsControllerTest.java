@@ -32,6 +32,6 @@ public class SnippetsControllerTest {
         mvc.perform(MockMvcRequestBuilders.get("/snippets")
                 .accept(MediaType.TEXT_HTML))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Your Snippets")));
+                .andExpect(content().string(containsString("your snippets")));
     }
 }
