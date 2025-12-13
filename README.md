@@ -38,7 +38,10 @@ find jar file in `target/jsnippets-{version}.jar`
 `mvn clean spring-boot:build-image`
 
 produces `norrisjackson.com/jsnippets:latest` locally, suitable for
-export/running in docker/podman/k8s/etc.
+export/running in docker/podman/k8s/etc. NB: this uses the paketo
+base docker images. For the smallest possible images, using jre/alpine,
+directly build using the provided Dockerfile as you would normally
+with docker or podman.
 
 ## run
 
