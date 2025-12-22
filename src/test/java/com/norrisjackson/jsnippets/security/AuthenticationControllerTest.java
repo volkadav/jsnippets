@@ -3,10 +3,12 @@ package com.norrisjackson.jsnippets.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.norrisjackson.jsnippets.controllers.rest.AuthenticationController;
 import com.norrisjackson.jsnippets.security.dto.AuthenticationRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -14,8 +16,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,26 +34,36 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Unit tests for AuthenticationController.
  * Tests authentication endpoints with mocked dependencies.
+ * Uses standalone MockMvc setup to avoid Spring context loading issues with JPA.
  */
-@WebMvcTest(AuthenticationController.class)
-@ActiveProfiles("test")
+@ExtendWith(MockitoExtension.class)
 class AuthenticationControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private ObjectMapper objectMapper = new ObjectMapper();
 
-    @MockBean
+    @Mock
     private AuthenticationManager authenticationManager;
 
-    @MockBean
+    @Mock
     private JwtUtil jwtUtil;
+
+    @InjectMocks
+    private AuthenticationController authenticationController;
 
     private static final String TEST_USERNAME = "testuser";
     private static final String TEST_PASSWORD = "password123";
     private static final String TEST_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.token";
+
+    @BeforeEach
+    void setUp() {
+        // Set up MockMvc with standalone configuration (no Spring context)
+        mockMvc = MockMvcBuilders.standaloneSetup(authenticationController).build();
+
+        // Inject the jwtExpiration value using reflection since @Value won't work in unit tests
+        ReflectionTestUtils.setField(authenticationController, "jwtExpiration", 86400000L);
+    }
 
     @Test
     void login_WithValidCredentials_ReturnsToken() throws Exception {
@@ -263,4 +276,3 @@ class AuthenticationControllerTest {
                 .andExpect(jsonPath("$.error", is("Token validation failed")));
     }
 }
-

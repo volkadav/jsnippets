@@ -149,9 +149,9 @@ class JwtUtilTest {
     void generateToken_TwoDifferentTokensForSameUser_AreDifferent() {
         String token1 = jwtUtil.generateToken(userDetails);
 
-        // Wait a bit to ensure different timestamp
+        // Wait a bit to ensure different timestamp (1 second to guarantee different iat claim)
         try {
-            Thread.sleep(10);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             // Ignore
         }
