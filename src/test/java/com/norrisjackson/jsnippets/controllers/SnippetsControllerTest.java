@@ -34,4 +34,26 @@ public class SnippetsControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("your snippets")));
     }
+
+    @Test
+    @WithMockUser(username = "alice")
+    public void getSnippetsListWithPaginationParameters() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.get("/snippets")
+                .param("page", "0")
+                .param("size", "10")
+                .param("sort", "desc")
+                .accept(MediaType.TEXT_HTML))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("your snippets")));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    public void getSnippetsListWithCustomPageSize() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.get("/snippets")
+                .param("page", "0")
+                .param("size", "50")
+                .accept(MediaType.TEXT_HTML))
+                .andExpect(status().isOk());
+    }
 }

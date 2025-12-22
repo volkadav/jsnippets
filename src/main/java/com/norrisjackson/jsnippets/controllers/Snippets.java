@@ -5,8 +5,12 @@ import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.SnippetService;
 
 import com.norrisjackson.jsnippets.services.UserService;
+import com.norrisjackson.jsnippets.configs.PaginationConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -16,17 +20,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
-
 @Controller
 @Slf4j
 public class Snippets {
     private final SnippetService snippetService;
     private final UserService userService;
+    private final PaginationConfig paginationConfig;
 
-    public Snippets(SnippetService snippetService, UserService userService) {
+    public Snippets(SnippetService snippetService, UserService userService, PaginationConfig paginationConfig) {
         this.snippetService = snippetService;
         this.userService = userService;
+        this.paginationConfig = paginationConfig;
     }
 
     // List all snippets
@@ -62,11 +66,23 @@ public class Snippets {
             sort = sort.descending();
         }
 
-        List<Snippet> snippets = snippetService.getSnippetsByPosterId(viewUser.getId(), sort);
-        long snippetCount = snippets.size();
-        log.info("Found {} snippets for user {}", snippetCount, viewUser.getUsername());
-        model.addAttribute("snippets", snippets);
+        // Pagination setup
+        int pageNumber = (page == null || page < 0) ? 0 : page;
+        int pageSize = paginationConfig.getEffectivePageSize(size);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+
+        // Get paginated snippets
+        Page<Snippet> snippetPage = snippetService.getSnippetsByPosterId(viewUser.getId(), pageable);
+        long snippetCount = snippetPage.getTotalElements();
+        log.info("Found {} snippets for user {} (page {} of {})",
+                snippetCount, viewUser.getUsername(), pageNumber + 1, snippetPage.getTotalPages());
+
+        model.addAttribute("snippets", snippetPage.getContent());
         model.addAttribute("snippetCount", snippetCount);
+        model.addAttribute("page", snippetPage);
+        model.addAttribute("currentPage", pageNumber);
+        model.addAttribute("totalPages", snippetPage.getTotalPages());
+        model.addAttribute("pageSize", pageSize);
 
         return "snippet/list";
     }

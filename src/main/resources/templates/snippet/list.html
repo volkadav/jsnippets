@@ -7,12 +7,18 @@
     <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
 </head>
 <body>
-<div class="container mt-5">
+<div class="container mt-5" th:with="baseUrl=${authUser.id == viewUser.id ? '/snippets' : '/snippets/' + viewUser.username}">
     <h1 class="mb-4">Snippets Timeline for <span th:text="${viewUser.username}"></span> <span class="text-muted fs-6">(<span th:text="${snippetCount}">0</span>)</span>
         <span class="ms-2">
-            <a th:if="${sortDir} == 'asc'" th:href="@{'/snippets?sort=desc'}" class="text-decoration-none" title="Sort by create/edit time descending">&#x25BC;</a>
-            <a th:if="${sortDir} == 'desc'" th:href="@{'/snippets?sort=asc'}" class="text-decoration-none" title="Sort by create/edit time ascending">&#x25B2;</a>
-            <a th:if="${sortDir} == null or (${sortDir} != 'asc' and ${sortDir} != 'desc')" th:href="@{'/snippets?sort=desc'}" class="text-decoration-none" title="Sort by create/edit time descending">&#x25BC;</a>
+            <a th:if="${sortDir} == 'asc'"
+               th:href="@{${baseUrl} + '?page=' + ${currentPage} + '&size=' + ${pageSize} + '&sort=desc'}"
+               class="text-decoration-none" title="Sort by create/edit time descending">&#x25BC;</a>
+            <a th:if="${sortDir} == 'desc'"
+               th:href="@{${baseUrl} + '?page=' + ${currentPage} + '&size=' + ${pageSize} + '&sort=asc'}"
+               class="text-decoration-none" title="Sort by create/edit time ascending">&#x25B2;</a>
+            <a th:if="${sortDir} == null or (${sortDir} != 'asc' and ${sortDir} != 'desc')"
+               th:href="@{${baseUrl} + '?page=' + ${currentPage} + '&size=' + ${pageSize} + '&sort=desc'}"
+               class="text-decoration-none" title="Sort by create/edit time descending">&#x25BC;</a>
         </span>
     </h1>
     <p class="mb-4 text-secondary" th:if="${authUser.id == viewUser.id}">Here are all your snippets. You can create, edit, or delete them as you wish.</p>
@@ -31,6 +37,79 @@
             </span>
         </li>
     </ul>
+
+    <!-- Pagination Controls -->
+    <nav th:if="${totalPages > 1}" aria-label="Snippet pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <!-- First Page -->
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{${baseUrl} + '?page=0&size=' + ${pageSize} + '&sort=' + ${sortDir}}" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+
+            <!-- Previous Page -->
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{${baseUrl} + '?page=' + ${currentPage - 1} + '&size=' + ${pageSize} + '&sort=' + ${sortDir}}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+
+            <!-- Page Numbers -->
+            <th:block th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}">
+                <!-- Show first 2 pages, last 2 pages, and 2 pages around current page -->
+                <li class="page-item"
+                    th:if="${pageNum < 2 or pageNum >= totalPages - 2 or (pageNum >= currentPage - 2 and pageNum <= currentPage + 2)}"
+                    th:classappend="${pageNum == currentPage} ? 'active'">
+                    <a class="page-link" th:href="@{${baseUrl} + '?page=' + ${pageNum} + '&size=' + ${pageSize} + '&sort=' + ${sortDir}}" th:text="${pageNum + 1}">1</a>
+                </li>
+                <!-- Show ellipsis -->
+                <li class="page-item disabled"
+                    th:if="${(pageNum == 2 and currentPage > 4) or (pageNum == totalPages - 3 and currentPage < totalPages - 5)}">
+                    <span class="page-link">...</span>
+                </li>
+            </th:block>
+
+            <!-- Next Page -->
+            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{${baseUrl} + '?page=' + ${currentPage + 1} + '&size=' + ${pageSize} + '&sort=' + ${sortDir}}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+
+            <!-- Last Page -->
+            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{${baseUrl} + '?page=' + ${totalPages - 1} + '&size=' + ${pageSize} + '&sort=' + ${sortDir}}" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Page Size Selector -->
+        <div class="text-center mt-2">
+            <span class="text-muted">Items per page: </span>
+            <div class="btn-group btn-group-sm" role="group" aria-label="Page size">
+                <a th:href="@{${baseUrl} + '?page=0&size=10&sort=' + ${sortDir}}"
+                   class="btn"
+                   th:classappend="${pageSize == 10} ? 'btn-primary' : 'btn-outline-primary'">10</a>
+                <a th:href="@{${baseUrl} + '?page=0&size=20&sort=' + ${sortDir}}"
+                   class="btn"
+                   th:classappend="${pageSize == 20} ? 'btn-primary' : 'btn-outline-primary'">20</a>
+                <a th:href="@{${baseUrl} + '?page=0&size=50&sort=' + ${sortDir}}"
+                   class="btn"
+                   th:classappend="${pageSize == 50} ? 'btn-primary' : 'btn-outline-primary'">50</a>
+                <a th:href="@{${baseUrl} + '?page=0&size=100&sort=' + ${sortDir}}"
+                   class="btn"
+                   th:classappend="${pageSize == 100} ? 'btn-primary' : 'btn-outline-primary'">100</a>
+            </div>
+        </div>
+
+        <!-- Page Info -->
+        <div class="text-center text-muted mt-2">
+            <small>Showing <span th:text="${#lists.size(snippets)}">0</span> of <span th:text="${snippetCount}">0</span> snippets (Page <span th:text="${currentPage + 1}">1</span> of <span th:text="${totalPages}">1</span>)</small>
+        </div>
+    </nav>
+
     <br/>
     <a th:href="@{'/'}" class="btn btn-primary mb-3">Home</a>
 </div>
