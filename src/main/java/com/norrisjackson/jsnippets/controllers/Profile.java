@@ -2,8 +2,9 @@ package com.norrisjackson.jsnippets.controllers;
 
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.UserService;
-import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,25 +24,22 @@ public class Profile {
         this.userService = userService;
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/profile")
     String profile(@RequestParam(required = false) String success,
                    @RequestParam(required = false) String error,
                    Model model) {
         User currentUser = (User) model.getAttribute("currentUser");
-        if (currentUser == null) {
-            log.warn("No current user found in model");
-            return "redirect:/login";
-        }
 
         // Add success and error messages if present
-        if (!Strings.isNullOrEmpty(success)) {
+        if (!StringUtils.isBlank(success)) {
             switch (success) {
                 case "updated" -> model.addAttribute("success", "Profile updated successfully!");
                 default -> model.addAttribute("success", "Operation completed successfully.");
             }
         }
 
-        if (!Strings.isNullOrEmpty(error)) {
+        if (!StringUtils.isBlank(error)) {
             switch (error) {
                 case "emptyfields" -> model.addAttribute("error", "Please fill in all required fields.");
                 case "invalidemail" -> model.addAttribute("error", "Please enter a valid email address.");
@@ -60,18 +58,15 @@ public class Profile {
         return "profile";
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/profile")
     String handleProfileUpdate(@RequestParam String email,
                                @RequestParam String timezone,
                                Model model) {
         User currentUser = (User) model.getAttribute("currentUser");
-        if (currentUser == null) {
-            log.warn("No current user found in model");
-            return "redirect:/login";
-        }
 
         // Validate input
-        if (Strings.isNullOrEmpty(email) || Strings.isNullOrEmpty(timezone)) {
+        if (StringUtils.isBlank(email) || StringUtils.isBlank(timezone)) {
             return "redirect:/profile?error=emptyfields";
         }
 

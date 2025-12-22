@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: jsnippets-db
+    environment:
+      POSTGRES_DB: jsnippets
+      POSTGRES_USER: jsnippets
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - jsnippets-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jsnippets"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # JSnippets Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jsnippets-app
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-prod}
+
+      # Database Configuration
+      PG_HOST: db
+      PG_PORT: 5432
+      PG_DB: jsnippets
+      PG_USER: jsnippets
+      PG_PASS: ${DB_PASSWORD:-password}
+
+      # JVM Options (can be overridden)
+      JAVA_OPTS: ${JAVA_OPTS:--XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0 -XX:+UseG1GC}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - jsnippets-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    # Resource limits (adjust based on your needs)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+networks:
+  jsnippets-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+

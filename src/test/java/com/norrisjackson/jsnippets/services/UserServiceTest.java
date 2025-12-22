@@ -51,53 +51,53 @@ class UserServiceTest {
     @Test
     void userExists_WhenUserFound_ReturnsTrue() {
         // Given
-        when(userRepository.findByUsername(testUsername)).thenReturn(Optional.of(testUser));
+        when(userRepository.existsByUsername(testUsername)).thenReturn(true);
 
         // When
         boolean exists = userService.userExists(testUsername);
 
         // Then
         assertThat(exists).isTrue();
-        verify(userRepository).findByUsername(testUsername);
+        verify(userRepository).existsByUsername(testUsername);
     }
 
     @Test
     void userExists_WhenUserNotFound_ReturnsFalse() {
         // Given
-        when(userRepository.findByUsername(testUsername)).thenReturn(Optional.empty());
+        when(userRepository.existsByUsername(testUsername)).thenReturn(false);
 
         // When
         boolean exists = userService.userExists(testUsername);
 
         // Then
         assertThat(exists).isFalse();
-        verify(userRepository).findByUsername(testUsername);
+        verify(userRepository).existsByUsername(testUsername);
     }
 
     @Test
     void emailExists_WhenEmailFound_ReturnsTrue() {
         // Given
-        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(userRepository.existsByEmail(testEmail)).thenReturn(true);
 
         // When
         boolean exists = userService.emailExists(testEmail);
 
         // Then
         assertThat(exists).isTrue();
-        verify(userRepository).findByEmail(testEmail);
+        verify(userRepository).existsByEmail(testEmail);
     }
 
     @Test
     void emailExists_WhenEmailNotFound_ReturnsFalse() {
         // Given
-        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+        when(userRepository.existsByEmail(testEmail)).thenReturn(false);
 
         // When
         boolean exists = userService.emailExists(testEmail);
 
         // Then
         assertThat(exists).isFalse();
-        verify(userRepository).findByEmail(testEmail);
+        verify(userRepository).existsByEmail(testEmail);
     }
 
     @Test

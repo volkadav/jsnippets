@@ -1,5 +1,6 @@
 package com.norrisjackson.jsnippets.controllers.rest;
 
+import com.norrisjackson.jsnippets.configs.PaginationConfig;
 import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.SnippetService;
@@ -30,10 +31,12 @@ import java.util.Optional;
 public class SnippetsApi {
     private final SnippetService snippetService;
     private final UserService userService;
+    private final PaginationConfig paginationConfig;
 
-    public SnippetsApi(SnippetService snippetService, UserService userService) {
+    public SnippetsApi(SnippetService snippetService, UserService userService, PaginationConfig paginationConfig) {
         this.snippetService = snippetService;
         this.userService = userService;
+        this.paginationConfig = paginationConfig;
     }
 
     private static class UserOrError {
@@ -67,7 +70,8 @@ public class SnippetsApi {
         if (userOrError.hasError()) return (ResponseEntity<Page<Snippet>>) userOrError.errorResponse;
         User currentUser = userOrError.user;
 
-        PageRequest page = PageRequest.of(pageNumber.orElse(0), pageSize.orElse(20),
+        int effectivePageSize = paginationConfig.getEffectivePageSize(pageSize.orElse(null));
+        PageRequest page = PageRequest.of(pageNumber.orElse(0), effectivePageSize,
                 Sort.by(Sort.Direction.DESC, "editedAt")
         );
 
@@ -148,7 +152,7 @@ public class SnippetsApi {
             snippetService.deleteSnippet(snippetId, currentUser);
             return ResponseEntity.noContent().build(); // 204 No Content
         } catch (EmptyResultDataAccessException e) {
-            log.info("someone tried to delete a snippet with id {} that doesn't exist", snippetId);
+            log.warn("someone tried to delete a snippet with id {} that doesn't exist", snippetId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }

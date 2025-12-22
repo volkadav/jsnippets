@@ -1,13 +1,14 @@
 package com.norrisjackson.jsnippets.controllers;
 
-import com.google.common.base.Strings;
 import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.SnippetService;
 
 import com.norrisjackson.jsnippets.services.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +30,7 @@ public class Snippets {
     }
 
     // List all snippets
+    @PreAuthorize("isAuthenticated()")
     @GetMapping({"/snippets", "/snippets/{username}"})
     String snippets(@PathVariable(name = "username", required = false) String username,
                     @RequestParam(name = "page", required = false) Integer page,
@@ -36,10 +38,6 @@ public class Snippets {
                     @RequestParam(name = "sort", required = false) String sortDir,
                     Model model) {
         User currentUser = (User) model.getAttribute("currentUser");
-        if (currentUser == null) {
-            log.warn("No current user found in model");
-            return "redirect:/login";
-        }
         model.addAttribute("authUser", currentUser);
         User viewUser = currentUser;
         if (username != null && !username.equals(currentUser.getUsername())) {
@@ -74,19 +72,17 @@ public class Snippets {
     }
 
     // Create a new snippet -- form display
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/snippets/new")
     String newSnippet(Model model) {
         return "snippet/new";
     }
 
     // Create a new snippet -- form handling
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/snippets/new")
     String handleNewSnippet(@RequestParam String contents, Model model) {
         User currentUser = (User) model.getAttribute("currentUser");
-        if (currentUser == null) {
-            log.warn("No current user found in model");
-            return "redirect:/login";
-        }
 
         snippetService.createSnippet(contents, currentUser);
 
@@ -94,6 +90,7 @@ public class Snippets {
     }
 
     // View a specific snippet
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/snippet/{id}")
     String viewSnippet(@PathVariable(name="id") Long id, Model model) {
         Snippet snippet = snippetService.getSnippetById(id).orElse(null);
@@ -105,10 +102,6 @@ public class Snippets {
         model.addAttribute("snippet", snippet);
 
         User currentUser = (User) model.getAttribute("currentUser");
-        if (currentUser == null) {
-            log.warn("No current user found in model");
-            return "redirect:/login";
-        }
         model.addAttribute("isOwner",
                 snippetService.userOwnsSnippet(snippet.getId(),
                 currentUser.getId()));
@@ -117,8 +110,9 @@ public class Snippets {
     }
 
     // Edit a specific snippet -- form display
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/snippet/{id}/edit")
-    String editSnippet(@PathVariable(name="id") Long id, Model model) throws Exception {
+    String editSnippet(@PathVariable(name="id") Long id, Model model) {
         Snippet snippet = snippetService.getSnippetById(id).orElse(null);
         if (snippet == null) {
             log.warn("Snippet not found: id={}", id);
@@ -126,10 +120,6 @@ public class Snippets {
         }
 
         User currentUser = (User) model.getAttribute("currentUser");
-        if (currentUser == null) {
-            log.warn("No current user found in model");
-            return "redirect:/login";
-        }
         if (!snippetService.userOwnsSnippet(id, currentUser.getId())) {
             log.warn("User {} attempted to edit snippet {} they do not own", currentUser.getUsername(), id);
             return "redirect:/snippets";
@@ -140,34 +130,28 @@ public class Snippets {
     }
 
     // Edit a specific snippet -- form handling
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/snippet/{id}/edit")
     String handleEditSnippet(@PathVariable(name="id") Long id, @RequestParam String contents, Model model) {
         User currentUser = (User) model.getAttribute("currentUser");
-        if (currentUser == null) {
-            log.warn("No current user found in model");
-            return "redirect:/login";
-        }
         if (!snippetService.userOwnsSnippet(id, currentUser.getId())) {
             log.warn("User {} attempted to edit snippet {} they do not own", currentUser.getUsername(), id);
             return "redirect:/snippets";
         }
-        if (Strings.isNullOrEmpty(contents)) {
+        if (StringUtils.isBlank(contents)) {
             log.warn("Attempted to update snippet with empty contents");
             return "redirect:/snippet/" + id + "/edit";
         }
 
         snippetService.updateSnippet(id, contents, currentUser);
-        return "redirect:/snippets/" + id;
+        return "redirect:/snippet/" + id;
     }
 
     // Delete a specific snippet -- form display
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/snippet/{id}/delete")
     String deleteSnippet(@PathVariable(name="id") Long id, Model model) {
         User currentUser = (User) model.getAttribute("currentUser");
-        if (currentUser == null) {
-            log.warn("No current user found");
-            return "redirect:/login";
-        }
 
         Snippet snippet = snippetService.getSnippetById(id).orElse(null);
 
@@ -186,13 +170,10 @@ public class Snippets {
     }
 
     // Delete a specific snippet -- form handling
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/snippet/{id}/delete")
     String handleDeleteSnippet(@PathVariable(name="id") Long id, Model model) {
         User currentUser = (User) model.getAttribute("currentUser");
-        if (currentUser == null) {
-            log.warn("No current user found in model");
-            return "redirect:/login";
-        }
 
         snippetService.deleteSnippet(id, currentUser);
         return "redirect:/snippets";

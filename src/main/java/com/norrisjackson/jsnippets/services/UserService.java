@@ -24,11 +24,11 @@ public class UserService implements UserDetailsService {
     }
 
     public boolean userExists(String username) {
-        return userRepository.findByUsername(username).isPresent();
+        return userRepository.existsByUsername(username);
     }
 
     public boolean emailExists(String email) {
-        return userRepository.findByEmail(email).isPresent();
+        return userRepository.existsByEmail(email);
     }
 
     public boolean authenticateUser(String username, String password) {

@@ -25,30 +25,152 @@ web ui and rest api stood up.
 - integrate with ticket systems like jira?
 - fancier web reporting ui to view updates along an org chart tree?
 
+## configuration
+
+The application uses Spring Boot profiles for environment-specific configuration:
+
+- **Default/Production**: Production-safe defaults (`spring.jpa.show-sql=false`, `logging.level.root=INFO`)
+- **Development**: Verbose logging with SQL output (`spring.jpa.show-sql=true`, DEBUG level)
+- **Test**: In-memory H2 database for automated testing
+
+### quick configuration
+
+Set profile via environment variable or command line:
+```bash
+# Development mode (verbose logging)
+export SPRING_PROFILES_ACTIVE=development
+./mvnw spring-boot:run
+
+# Production mode (uses secure defaults)
+java -jar jsnippets.jar
+```
+
+### environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SPRING_PROFILES_ACTIVE` | - | Profile: `development`, `prod`, or `test` |
+| `PG_HOST` | localhost | PostgreSQL host |
+| `PG_PORT` | 5432 | PostgreSQL port |
+| `PG_DB` | jsnippets | Database name |
+| `PG_USER` | jsnippets | Database username |
+| `PG_PASS` | password | Database password |
+
+See [CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md) for complete details.
+
+## docker deployment
+
+### quick start with docker compose (recommended)
+
+```bash
+# 1. Create environment file
+cp .env.example .env
+
+# 2. Set secure password in .env
+echo "DB_PASSWORD=your_secure_password" >> .env
+
+# 3. Start application and database
+docker-compose up -d
+
+# 4. Access application
+open http://localhost:8080
+```
+
+### manual docker build and run
+
+```bash
+# Build optimized JRE-only image (~200MB)
+docker build -t jsnippets:latest .
+
+# Run with external database
+docker run -d -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  -e PG_HOST=your-db-host \
+  -e PG_USER=jsnippets \
+  -e PG_PASS=your-password \
+  jsnippets:latest
+```
+
+### docker image features
+
+- **Small & Secure**: ~200MB JRE-only Alpine image (55% smaller than JDK)
+- **Non-root**: Runs as `spring:spring` user for security
+- **Optimized**: Container-aware JVM with G1GC and memory tuning
+- **Production-ready**: Health checks, proper resource limits, comprehensive monitoring
+
+See [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md) for complete deployment guide including:
+- Docker Swarm and Kubernetes examples
+- Monitoring and troubleshooting
+- Backup/restore procedures
+- Performance tuning
+
 ## package
 
 ### executable jar
 
-`mvn clean package`
+```bash
+mvn clean package
+```
 
-find jar file in `target/jsnippets-{version}.jar`
+Find jar file in `target/jsnippets-{version}.jar`
 
-### container image
+### container image (dockerfile)
 
-`mvn clean spring-boot:build-image`
+```bash
+# Recommended: Optimized multi-stage build with JRE-only Alpine
+docker build -t jsnippets:latest .
+```
 
-produces `norrisjackson.com/jsnippets:latest` locally, suitable for
-export/running in docker/podman/k8s/etc. NB: this uses the paketo
-base docker images. For the smallest possible images, using jre/alpine,
-directly build using the provided Dockerfile as you would normally
-with docker or podman.
+This produces a ~200MB image with:
+- Amazon Corretto 17 JRE (Alpine Linux)
+- Non-root user execution
+- Health checks for orchestration
+- JVM optimized for containers
+
+See [DOCKERFILE_IMPROVEMENTS.md](DOCKERFILE_IMPROVEMENTS.md) for technical details.
+
+### alternative: spring boot buildpack
+
+```bash
+mvn clean spring-boot:build-image
+```
+
+Produces `norrisjackson.com/jsnippets:latest` using Paketo buildpacks (~400-500MB).
 
 ## run
 
-- make jsnippets pgsql user and db it is owner of
-- use env vars to set PG_HOST, PG_PORT, PG_DB, PG_USER, PG_PASS
-- execute: java -jar path/to/jsnippets.jar (for an executable jar) or
-whatever container magic you prefer to run the containerized version
+### local development
+
+```bash
+# 1. Create PostgreSQL database
+createdb jsnippets
+createuser jsnippets
+
+# 2. Set environment variables
+export SPRING_PROFILES_ACTIVE=development
+export PG_HOST=localhost
+export PG_USER=jsnippets
+export PG_PASS=your_password
+
+# 3. Run application
+./mvnw spring-boot:run
+```
+
+### production jar
+
+```bash
+# With environment variables
+export SPRING_PROFILES_ACTIVE=prod
+export PG_HOST=prod-db-host
+export PG_USER=jsnippets
+export PG_PASS=secure_password
+
+java -jar target/jsnippets-{version}.jar
+```
+
+### production docker
+
+See [Docker Deployment](#docker-deployment) section above.
 
 ## run requirements
 
@@ -64,3 +186,35 @@ whatever container magic you prefer to run the containerized version
 ## license
 
 Apache 2.0, copyright authors as noted in banner.txt
+
+## documentation
+
+Comprehensive guides are available for deployment and configuration:
+
+- **[CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md)** - Complete configuration reference
+  - Profile-based configuration (dev/prod/test)
+  - Environment variables
+  - Database configuration
+  - Best practices
+
+- **[DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)** - Docker deployment guide
+  - Quick start with Docker Compose
+  - Manual Docker commands
+  - Kubernetes and Docker Swarm examples
+  - Monitoring and troubleshooting
+  - Backup and restore procedures
+
+- **[DOCKERFILE_IMPROVEMENTS.md](DOCKERFILE_IMPROVEMENTS.md)** - Technical deep-dive
+  - Image optimization details (55% size reduction)
+  - Security improvements (non-root execution)
+  - Performance tuning (JVM optimizations)
+  - Build time optimizations
+
+- **[USERREPOSITORY_IMPROVEMENTS.md](USERREPOSITORY_IMPROVEMENTS.md)** - Security & performance
+  - SQL injection prevention
+  - N+1 query prevention
+  - Query optimization
+  - Caching strategies
+
+- **[SECURITY_FIXES.md](SECURITY_FIXES.md)** - Security improvements applied
+

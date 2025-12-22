@@ -3,13 +3,12 @@ package com.norrisjackson.jsnippets.controllers;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import com.google.common.base.Strings;
 
 import java.util.Optional;
 
@@ -24,7 +23,7 @@ public class Register {
 
     @GetMapping("/register")
     String register(@RequestParam(required = false) String error, Model model) {
-        if (!Strings.isNullOrEmpty(error)) {
+        if (!StringUtils.isBlank(error)) {
             switch (error) {
                 case "emptyfields" -> model.addAttribute("error", "Please fill in all fields.");
                 case "passwordmismatch" -> model.addAttribute("error", "Passwords do not match.");
@@ -44,8 +43,8 @@ public class Register {
                           @RequestParam String password,
                           @RequestParam String password2,
                           @RequestParam String email) {
-        if (Strings.isNullOrEmpty(username) || Strings.isNullOrEmpty(password) ||
-            Strings.isNullOrEmpty(password2) || Strings.isNullOrEmpty(email)) {
+        if (StringUtils.isBlank(username) || StringUtils.isBlank(password) ||
+            StringUtils.isBlank(password2) || StringUtils.isBlank(email)) {
             return "redirect:/register?error=emptyfields";
         }
         if (!password.equals(password2)) {

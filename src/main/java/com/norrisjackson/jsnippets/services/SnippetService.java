@@ -47,18 +47,34 @@ public class SnippetService {
     }
 
     public List<Snippet> getSnippetsByPosterId(Long posterId) {
+        if (posterId == null || posterId <= 0) {
+            log.warn("Invalid posterId provided: {}", posterId);
+            return List.of();
+        }
         return snippetRepository.findByPosterId(posterId);
     }
 
     public long getSnippetCountByPosterId(Long posterId) {
+        if (posterId == null || posterId <= 0) {
+            log.warn("Invalid posterId provided for count: {}", posterId);
+            return 0;
+        }
         return snippetRepository.countByPosterId(posterId);
     }
 
     public List<Snippet> getSnippetsByPosterId(Long posterId, Sort sort) {
+        if (posterId == null || posterId <= 0) {
+            log.warn("Invalid posterId provided: {}", posterId);
+            return List.of();
+        }
         return snippetRepository.findByPosterId(posterId, sort);
     }
 
     public Page<Snippet> getSnippetsByPosterId(Long posterId, Pageable pageable) {
+        if (posterId == null || posterId <= 0) {
+            log.warn("Invalid posterId provided: {}", posterId);
+            return Page.empty();
+        }
         return snippetRepository.findByPosterId(posterId, pageable);
     }
 
