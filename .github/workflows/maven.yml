@@ -49,4 +49,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: maven-jar
-        path: target/*-${{ env.TS }}.jar
+        path: target/*-${{ env.BUILD_TIMESTAMP }}.jar
+        retention-days: 21
