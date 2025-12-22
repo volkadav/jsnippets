@@ -17,13 +17,47 @@ web ui and rest api stood up.
 
 ## outstanding TODOs
 
-- basic follower mechanics
 - start email support (periodic reports? submission via email?)
 
 ## future work ideas
 
 - integrate with ticket systems like jira?
 - fancier web reporting ui to view updates along an org chart tree?
+
+## quickstart run
+
+### local development
+
+```bash
+# 1. Create PostgreSQL database
+createdb jsnippets
+createuser jsnippets
+
+# 2. Set environment variables
+export SPRING_PROFILES_ACTIVE=development
+export PG_HOST=localhost
+export PG_USER=jsnippets
+export PG_PASS=your_password
+
+# 3. Run application
+./mvnw spring-boot:run
+```
+
+### production jar
+
+```bash
+# With environment variables
+export SPRING_PROFILES_ACTIVE=prod
+export PG_HOST=prod-db-host
+export PG_USER=jsnippets
+export PG_PASS=secure_password
+
+java -jar target/jsnippets-{version}.jar
+```
+
+### production docker
+
+See [Docker Deployment](#docker-deployment) section above.
 
 ## configuration
 
@@ -91,19 +125,6 @@ docker run -d -p 8080:8080 \
   jsnippets:latest
 ```
 
-### docker image features
-
-- **Small & Secure**: ~200MB JRE-only Alpine image (55% smaller than JDK)
-- **Non-root**: Runs as `spring:spring` user for security
-- **Optimized**: Container-aware JVM with G1GC and memory tuning
-- **Production-ready**: Health checks, proper resource limits, comprehensive monitoring
-
-See [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md) for complete deployment guide including:
-- Docker Swarm and Kubernetes examples
-- Monitoring and troubleshooting
-- Backup/restore procedures
-- Performance tuning
-
 ## package
 
 ### executable jar
@@ -137,41 +158,6 @@ mvn clean spring-boot:build-image
 
 Produces `norrisjackson.com/jsnippets:latest` using Paketo buildpacks (~400-500MB).
 
-## run
-
-### local development
-
-```bash
-# 1. Create PostgreSQL database
-createdb jsnippets
-createuser jsnippets
-
-# 2. Set environment variables
-export SPRING_PROFILES_ACTIVE=development
-export PG_HOST=localhost
-export PG_USER=jsnippets
-export PG_PASS=your_password
-
-# 3. Run application
-./mvnw spring-boot:run
-```
-
-### production jar
-
-```bash
-# With environment variables
-export SPRING_PROFILES_ACTIVE=prod
-export PG_HOST=prod-db-host
-export PG_USER=jsnippets
-export PG_PASS=secure_password
-
-java -jar target/jsnippets-{version}.jar
-```
-
-### production docker
-
-See [Docker Deployment](#docker-deployment) section above.
-
 ## run requirements
 
 - jre 17+ (tested with 21)
@@ -182,10 +168,6 @@ See [Docker Deployment](#docker-deployment) section above.
 
 - jdk 17+ (tested with 21)
 - maven 3
-
-## license
-
-Apache 2.0, copyright authors as noted in banner.txt
 
 ## documentation
 
@@ -204,17 +186,6 @@ Comprehensive guides are available for deployment and configuration:
   - Monitoring and troubleshooting
   - Backup and restore procedures
 
-- **[DOCKERFILE_IMPROVEMENTS.md](DOCKERFILE_IMPROVEMENTS.md)** - Technical deep-dive
-  - Image optimization details (55% size reduction)
-  - Security improvements (non-root execution)
-  - Performance tuning (JVM optimizations)
-  - Build time optimizations
+## license
 
-- **[USERREPOSITORY_IMPROVEMENTS.md](USERREPOSITORY_IMPROVEMENTS.md)** - Security & performance
-  - SQL injection prevention
-  - N+1 query prevention
-  - Query optimization
-  - Caching strategies
-
-- **[SECURITY_FIXES.md](SECURITY_FIXES.md)** - Security improvements applied
-
+Apache 2.0, copyright authors as noted in banner.txt
