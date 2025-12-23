@@ -1,6 +1,7 @@
 package com.norrisjackson.jsnippets.configs;
 
 import com.norrisjackson.jsnippets.security.JwtAuthenticationFilter;
+import com.norrisjackson.jsnippets.security.RateLimitingFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -21,9 +22,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RateLimitingFilter rateLimitingFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, RateLimitingFilter rateLimitingFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.rateLimitingFilter = rateLimitingFilter;
     }
 
     /**
@@ -45,7 +48,7 @@ public class SecurityConfig {
             .securityMatcher("/api/**")
             .csrf(csrf -> csrf.disable()) // Disable CSRF for stateless API
             .authorizeHttpRequests(authz -> authz
-                    .requestMatchers("/api/auth/**").permitAll() // Allow authentication endpoints
+                    .requestMatchers("/api/auth/**", "/api/v1/auth/**").permitAll() // Allow authentication endpoints
                     .anyRequest().authenticated()) // All other API requests require authentication
             .sessionManagement(session -> session
                     .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless sessions for API
@@ -55,6 +58,7 @@ public class SecurityConfig {
                         response.setContentType("application/json");
                         response.getWriter().write("{\"error\":\"Unauthorized\"}");
                     }))
+            .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class) // Add rate limiting first
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
 
         return http.build();

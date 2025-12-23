@@ -24,7 +24,7 @@ import java.util.Map;
  * REST controller for JWT authentication endpoints
  */
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 @Slf4j
 @Tag(name = "Authentication", description = "JWT-based authentication operations")
 public class AuthenticationController {

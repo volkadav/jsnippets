@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping(path = "/api/snippets", produces = "application/json")
+@RequestMapping(path = "/api/v1/snippets", produces = "application/json")
 @Slf4j
 @Tag(name = "Snippets", description = "Operations related to JSnippets snippet data")
 public class SnippetsApi {

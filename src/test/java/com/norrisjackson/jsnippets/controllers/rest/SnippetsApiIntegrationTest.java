@@ -62,6 +62,11 @@ class SnippetsApiIntegrationTest {
     private static final String OTHER_USERNAME = "otheruser";
     private static final String OTHER_PASSWORD = "otherpass456";
 
+    // API paths (versioned)
+    private static final String AUTH_LOGIN_PATH = "/api/v1/auth/login";
+    private static final String AUTH_VALIDATE_PATH = "/api/v1/auth/validate";
+    private static final String SNIPPETS_PATH = "/api/v1/snippets";
+
     @BeforeEach
     void setUp() {
         // Clean up
@@ -98,7 +103,7 @@ class SnippetsApiIntegrationTest {
     private String getJwtToken(String username, String password) throws Exception {
         AuthenticationRequest request = new AuthenticationRequest(username, password);
 
-        MvcResult result = mockMvc.perform(post("/api/auth/login")
+        MvcResult result = mockMvc.perform(post(AUTH_LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -116,7 +121,7 @@ class SnippetsApiIntegrationTest {
     void login_WithValidCredentials_ReturnsJwtToken() throws Exception {
         AuthenticationRequest request = new AuthenticationRequest(TEST_USERNAME, TEST_PASSWORD);
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(AUTH_LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -132,7 +137,7 @@ class SnippetsApiIntegrationTest {
     void login_WithInvalidUsername_ReturnsUnauthorized() throws Exception {
         AuthenticationRequest request = new AuthenticationRequest("nonexistent", TEST_PASSWORD);
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(AUTH_LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
@@ -143,7 +148,7 @@ class SnippetsApiIntegrationTest {
     void login_WithInvalidPassword_ReturnsUnauthorized() throws Exception {
         AuthenticationRequest request = new AuthenticationRequest(TEST_USERNAME, "wrongpassword");
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(AUTH_LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
@@ -154,7 +159,7 @@ class SnippetsApiIntegrationTest {
     void validateToken_WithValidToken_ReturnsValid() throws Exception {
         String token = getJwtToken(TEST_USERNAME, TEST_PASSWORD);
 
-        mockMvc.perform(get("/api/auth/validate")
+        mockMvc.perform(get(AUTH_VALIDATE_PATH)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid", is(true)))
@@ -164,7 +169,7 @@ class SnippetsApiIntegrationTest {
 
     @Test
     void validateToken_WithInvalidToken_ReturnsInvalid() throws Exception {
-        mockMvc.perform(get("/api/auth/validate")
+        mockMvc.perform(get(AUTH_VALIDATE_PATH)
                         .header("Authorization", "Bearer invalid.token.here"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid", is(false)))
@@ -173,7 +178,7 @@ class SnippetsApiIntegrationTest {
 
     @Test
     void validateToken_WithoutAuthHeader_ReturnsBadRequest() throws Exception {
-        mockMvc.perform(get("/api/auth/validate"))
+        mockMvc.perform(get(AUTH_VALIDATE_PATH))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("Missing or invalid Authorization header")));
     }
@@ -184,7 +189,7 @@ class SnippetsApiIntegrationTest {
     void getSnippets_WithValidJwtToken_ReturnsSnippets() throws Exception {
         String token = getJwtToken(TEST_USERNAME, TEST_PASSWORD);
 
-        mockMvc.perform(get("/api/snippets")
+        mockMvc.perform(get(SNIPPETS_PATH)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
@@ -194,13 +199,13 @@ class SnippetsApiIntegrationTest {
 
     @Test
     void getSnippets_WithoutJwtToken_ReturnsUnauthorized() throws Exception {
-        mockMvc.perform(get("/api/snippets"))
+        mockMvc.perform(get(SNIPPETS_PATH))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void getSnippets_WithInvalidJwtToken_ReturnsUnauthorized() throws Exception {
-        mockMvc.perform(get("/api/snippets")
+        mockMvc.perform(get(SNIPPETS_PATH)
                         .header("Authorization", "Bearer invalid.token"))
                 .andExpect(status().isUnauthorized());
     }
@@ -209,7 +214,7 @@ class SnippetsApiIntegrationTest {
     void getSnippetById_WithValidJwtToken_ReturnsSnippet() throws Exception {
         String token = getJwtToken(TEST_USERNAME, TEST_PASSWORD);
 
-        mockMvc.perform(get("/api/snippets/" + testSnippet.getId())
+        mockMvc.perform(get(SNIPPETS_PATH + "/" + testSnippet.getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(testSnippet.getId().intValue())))
@@ -221,7 +226,7 @@ class SnippetsApiIntegrationTest {
         String token = getJwtToken(TEST_USERNAME, TEST_PASSWORD);
         String newContent = "New snippet via JWT";
 
-        mockMvc.perform(post("/api/snippets")
+        mockMvc.perform(post(SNIPPETS_PATH)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("contents", newContent))
@@ -232,7 +237,7 @@ class SnippetsApiIntegrationTest {
 
     @Test
     void createSnippet_WithoutJwtToken_ReturnsUnauthorized() throws Exception {
-        mockMvc.perform(post("/api/snippets")
+        mockMvc.perform(post(SNIPPETS_PATH)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("contents", "New snippet"))
                 .andExpect(status().isUnauthorized());
@@ -245,7 +250,7 @@ class SnippetsApiIntegrationTest {
         Map<String, String> updates = new HashMap<>();
         updates.put("contents", updatedContent);
 
-        mockMvc.perform(patch("/api/snippets/" + testSnippet.getId())
+        mockMvc.perform(patch(SNIPPETS_PATH + "/" + testSnippet.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updates)))
@@ -258,7 +263,7 @@ class SnippetsApiIntegrationTest {
         Map<String, String> updates = new HashMap<>();
         updates.put("contents", "Updated content");
 
-        mockMvc.perform(patch("/api/snippets/" + testSnippet.getId())
+        mockMvc.perform(patch(SNIPPETS_PATH + "/" + testSnippet.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updates)))
                 .andExpect(status().isUnauthorized());
@@ -268,19 +273,19 @@ class SnippetsApiIntegrationTest {
     void deleteSnippet_WithValidJwtToken_DeletesSnippet() throws Exception {
         String token = getJwtToken(TEST_USERNAME, TEST_PASSWORD);
 
-        mockMvc.perform(delete("/api/snippets/" + testSnippet.getId())
+        mockMvc.perform(delete(SNIPPETS_PATH + "/" + testSnippet.getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
 
         // Verify deletion
-        mockMvc.perform(get("/api/snippets/" + testSnippet.getId())
+        mockMvc.perform(get(SNIPPETS_PATH + "/" + testSnippet.getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void deleteSnippet_WithoutJwtToken_ReturnsUnauthorized() throws Exception {
-        mockMvc.perform(delete("/api/snippets/" + testSnippet.getId()))
+        mockMvc.perform(delete(SNIPPETS_PATH + "/" + testSnippet.getId()))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -292,12 +297,12 @@ class SnippetsApiIntegrationTest {
         String otherUserToken = getJwtToken(OTHER_USERNAME, OTHER_PASSWORD);
 
         // testUser can access their own snippet
-        mockMvc.perform(get("/api/snippets/" + testSnippet.getId())
+        mockMvc.perform(get(SNIPPETS_PATH + "/" + testSnippet.getId())
                         .header("Authorization", "Bearer " + testUserToken))
                 .andExpect(status().isOk());
 
         // otherUser cannot access testUser's snippet
-        mockMvc.perform(get("/api/snippets/" + testSnippet.getId())
+        mockMvc.perform(get(SNIPPETS_PATH + "/" + testSnippet.getId())
                         .header("Authorization", "Bearer " + otherUserToken))
                 .andExpect(status().isNotFound());
     }
@@ -307,7 +312,7 @@ class SnippetsApiIntegrationTest {
         String otherUserToken = getJwtToken(OTHER_USERNAME, OTHER_PASSWORD);
 
         // otherUser's token should not give access to testUser's snippets
-        mockMvc.perform(get("/api/snippets/" + testSnippet.getId())
+        mockMvc.perform(get(SNIPPETS_PATH + "/" + testSnippet.getId())
                         .header("Authorization", "Bearer " + otherUserToken))
                 .andExpect(status().isNotFound());
     }
@@ -323,7 +328,7 @@ class SnippetsApiIntegrationTest {
 
         // 2. Create snippet with token
         String initialContent = "JWT workflow snippet";
-        MvcResult createResult = mockMvc.perform(post("/api/snippets")
+        MvcResult createResult = mockMvc.perform(post(SNIPPETS_PATH)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("contents", initialContent))
@@ -334,7 +339,7 @@ class SnippetsApiIntegrationTest {
         Long snippetId = created.getId();
 
         // 3. Read snippet with token
-        mockMvc.perform(get("/api/snippets/" + snippetId)
+        mockMvc.perform(get(SNIPPETS_PATH + "/" + snippetId)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.contents", is(initialContent)));
@@ -344,7 +349,7 @@ class SnippetsApiIntegrationTest {
         Map<String, String> updates = new HashMap<>();
         updates.put("contents", updatedContent);
 
-        mockMvc.perform(patch("/api/snippets/" + snippetId)
+        mockMvc.perform(patch(SNIPPETS_PATH + "/" + snippetId)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updates)))
@@ -352,12 +357,12 @@ class SnippetsApiIntegrationTest {
                 .andExpect(jsonPath("$.contents", is(updatedContent)));
 
         // 5. Delete snippet with token
-        mockMvc.perform(delete("/api/snippets/" + snippetId)
+        mockMvc.perform(delete(SNIPPETS_PATH + "/" + snippetId)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
 
         // 6. Verify deletion
-        mockMvc.perform(get("/api/snippets/" + snippetId)
+        mockMvc.perform(get(SNIPPETS_PATH + "/" + snippetId)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
     }
@@ -368,7 +373,7 @@ class SnippetsApiIntegrationTest {
 
         // Use the same token for multiple requests
         for (int i = 0; i < 5; i++) {
-            mockMvc.perform(get("/api/snippets")
+            mockMvc.perform(get(SNIPPETS_PATH)
                             .header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
@@ -377,19 +382,19 @@ class SnippetsApiIntegrationTest {
     @Test
     void malformedAuthorizationHeader_ReturnsUnauthorized() throws Exception {
         // Missing "Bearer " prefix
-        mockMvc.perform(get("/api/snippets")
+        mockMvc.perform(get(SNIPPETS_PATH)
                         .header("Authorization", "sometoken"))
                 .andExpect(status().isUnauthorized());
 
         // Wrong prefix
-        mockMvc.perform(get("/api/snippets")
+        mockMvc.perform(get(SNIPPETS_PATH)
                         .header("Authorization", "Basic sometoken"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void emptyAuthorizationHeader_ReturnsUnauthorized() throws Exception {
-        mockMvc.perform(get("/api/snippets")
+        mockMvc.perform(get(SNIPPETS_PATH)
                         .header("Authorization", ""))
                 .andExpect(status().isUnauthorized());
     }
@@ -399,7 +404,7 @@ class SnippetsApiIntegrationTest {
         String token = getJwtToken(TEST_USERNAME, TEST_PASSWORD);
 
         // Token should be in header, not body
-        mockMvc.perform(post("/api/snippets")
+        mockMvc.perform(post(SNIPPETS_PATH)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("contents", "New snippet")
                         .param("token", token)) // Wrong - token should be in header
@@ -414,12 +419,12 @@ class SnippetsApiIntegrationTest {
         assertNotEquals(token1, token2);
 
         // Each token works for its own user
-        mockMvc.perform(get("/api/snippets")
+        mockMvc.perform(get(SNIPPETS_PATH)
                         .header("Authorization", "Bearer " + token1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].poster.username", is(TEST_USERNAME)));
 
-        mockMvc.perform(get("/api/snippets")
+        mockMvc.perform(get(SNIPPETS_PATH)
                         .header("Authorization", "Bearer " + token2))
                 .andExpect(status().isOk());
     }
@@ -440,7 +445,7 @@ class SnippetsApiIntegrationTest {
             snippetRepository.save(snippet);
         }
 
-        mockMvc.perform(get("/api/snippets")
+        mockMvc.perform(get(SNIPPETS_PATH)
                         .param("pageNumber", "0")
                         .param("pageSize", "3")
                         .header("Authorization", "Bearer " + token))
@@ -466,7 +471,7 @@ class SnippetsApiIntegrationTest {
             snippetRepository.save(snippet);
         }
 
-        mockMvc.perform(get("/api/snippets")
+        mockMvc.perform(get(SNIPPETS_PATH)
                         .param("pageNumber", "1")
                         .param("pageSize", "3")
                         .header("Authorization", "Bearer " + token))
@@ -481,7 +486,7 @@ class SnippetsApiIntegrationTest {
     void createSnippet_WithEmptyContent_ReturnsBadRequest() throws Exception {
         String token = getJwtToken(TEST_USERNAME, TEST_PASSWORD);
 
-        mockMvc.perform(post("/api/snippets")
+        mockMvc.perform(post(SNIPPETS_PATH)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("contents", ""))
@@ -492,7 +497,7 @@ class SnippetsApiIntegrationTest {
     void createSnippet_WithBlankContent_ReturnsBadRequest() throws Exception {
         String token = getJwtToken(TEST_USERNAME, TEST_PASSWORD);
 
-        mockMvc.perform(post("/api/snippets")
+        mockMvc.perform(post(SNIPPETS_PATH)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("contents", "   "))
@@ -505,7 +510,7 @@ class SnippetsApiIntegrationTest {
         Map<String, String> updates = new HashMap<>();
         updates.put("contents", "");
 
-        mockMvc.perform(patch("/api/snippets/" + testSnippet.getId())
+        mockMvc.perform(patch(SNIPPETS_PATH + "/" + testSnippet.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updates)))
@@ -518,7 +523,7 @@ class SnippetsApiIntegrationTest {
         Map<String, String> updates = new HashMap<>();
         updates.put("contents", "   ");
 
-        mockMvc.perform(patch("/api/snippets/" + testSnippet.getId())
+        mockMvc.perform(patch(SNIPPETS_PATH + "/" + testSnippet.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updates)))
@@ -531,7 +536,7 @@ class SnippetsApiIntegrationTest {
         Map<String, String> updates = new HashMap<>();
         // Don't put "contents" key at all
 
-        mockMvc.perform(patch("/api/snippets/" + testSnippet.getId())
+        mockMvc.perform(patch(SNIPPETS_PATH + "/" + testSnippet.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updates)))
@@ -555,7 +560,7 @@ class SnippetsApiIntegrationTest {
         Map<String, String> updates = new HashMap<>();
         updates.put("contents", "Trying to update other's snippet");
 
-        mockMvc.perform(patch("/api/snippets/" + otherSnippet.getId())
+        mockMvc.perform(patch(SNIPPETS_PATH + "/" + otherSnippet.getId())
                         .header("Authorization", "Bearer " + testUserToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updates)))
@@ -569,7 +574,7 @@ class SnippetsApiIntegrationTest {
         updates.put("contents", "Updated content");
 
         // Non-existent snippet returns 403 because userOwnsSnippet returns false
-        mockMvc.perform(patch("/api/snippets/99999")
+        mockMvc.perform(patch(SNIPPETS_PATH + "/99999")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updates)))
@@ -588,13 +593,13 @@ class SnippetsApiIntegrationTest {
         otherSnippet.setEditedAt(new Date());
         otherSnippet = snippetRepository.save(otherSnippet);
 
-        mockMvc.perform(delete("/api/snippets/" + otherSnippet.getId())
+        mockMvc.perform(delete(SNIPPETS_PATH + "/" + otherSnippet.getId())
                         .header("Authorization", "Bearer " + testUserToken))
                 .andExpect(status().isForbidden());
 
         // Verify snippet still exists for otherUser
         String otherUserToken = getJwtToken(OTHER_USERNAME, OTHER_PASSWORD);
-        mockMvc.perform(get("/api/snippets/" + otherSnippet.getId())
+        mockMvc.perform(get(SNIPPETS_PATH + "/" + otherSnippet.getId())
                         .header("Authorization", "Bearer " + otherUserToken))
                 .andExpect(status().isOk());
     }
@@ -604,10 +609,9 @@ class SnippetsApiIntegrationTest {
         String token = getJwtToken(TEST_USERNAME, TEST_PASSWORD);
 
         // Non-existent snippet returns 403 because userOwnsSnippet returns false
-        mockMvc.perform(delete("/api/snippets/99999")
+        mockMvc.perform(delete(SNIPPETS_PATH + "/99999")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
     }
 }
-
 

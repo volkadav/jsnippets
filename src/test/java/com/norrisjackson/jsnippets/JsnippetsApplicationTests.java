@@ -28,6 +28,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @ActiveProfiles("test")
 class JsnippetsApplicationTests {
 
+	// API paths (versioned)
+	private static final String AUTH_LOGIN_PATH = "/api/v1/auth/login";
+	private static final String SNIPPETS_PATH = "/api/v1/snippets";
+
 	@Autowired
 	private TestRestTemplate restTemplate;
 
@@ -86,7 +90,7 @@ class JsnippetsApplicationTests {
 	 */
 	private String getJwtToken(String username, String password) {
 		AuthenticationRequest request = new AuthenticationRequest(username, password);
-		ResponseEntity<Map> response = restTemplate.postForEntity("/api/auth/login", request, Map.class);
+		ResponseEntity<Map> response = restTemplate.postForEntity(AUTH_LOGIN_PATH, request, Map.class);
 		assertEquals(HttpStatus.OK, response.getStatusCode());
 		assertNotNull(response.getBody());
 		return (String) response.getBody().get("token");
@@ -109,7 +113,7 @@ class JsnippetsApplicationTests {
 
 		// List Alice's snippets
 		HttpEntity<String> requestEntity = new HttpEntity<>(aliceHeaders);
-		ResponseEntity<String> listResp = restTemplate.exchange("/api/snippets", HttpMethod.GET, requestEntity, String.class);
+		ResponseEntity<String> listResp = restTemplate.exchange(SNIPPETS_PATH, HttpMethod.GET, requestEntity, String.class);
 		assertEquals(HttpStatus.OK, listResp.getStatusCode());
         assertNotNull(listResp.getBody());
 		assertTrue(listResp.getBody().contains("Lorem ipsum"));
@@ -117,7 +121,7 @@ class JsnippetsApplicationTests {
 		// View Alice's snippet
 		List<Snippet> aliceSnippets = snippetRepository.findByPosterId(userRepository.findByUsername("alice").get().getId());
 		Long snippetId = aliceSnippets.get(0).getId();
-		ResponseEntity<Snippet> viewResp = restTemplate.exchange("/api/snippets/" + snippetId, HttpMethod.GET,
+		ResponseEntity<Snippet> viewResp = restTemplate.exchange(SNIPPETS_PATH + "/" + snippetId, HttpMethod.GET,
 			new HttpEntity<>(aliceHeaders), Snippet.class);
 		assertEquals(HttpStatus.OK, viewResp.getStatusCode());
         assertNotNull(viewResp.getBody());
@@ -127,7 +131,7 @@ class JsnippetsApplicationTests {
 		HttpHeaders createHeaders = createHeadersWithJwt(aliceToken);
 		createHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		HttpEntity<String> createReq = new HttpEntity<>("contents=New snippet for Alice", createHeaders);
-		ResponseEntity<Snippet> createResp = restTemplate.postForEntity("/api/snippets", createReq, Snippet.class);
+		ResponseEntity<Snippet> createResp = restTemplate.postForEntity(SNIPPETS_PATH, createReq, Snippet.class);
 		assertEquals(HttpStatus.CREATED, createResp.getStatusCode());
         assertNotNull(createResp.getBody());
 		assertEquals("New snippet for Alice", createResp.getBody().getContents());
@@ -138,12 +142,12 @@ class JsnippetsApplicationTests {
         editHeaders.setContentType(MediaType.APPLICATION_JSON);
         String jsonBody = "{\"contents\": \"Edited snippet for Alice\"}";
         HttpEntity<String> editReq = new HttpEntity<>(jsonBody, editHeaders);
-		ResponseEntity<Snippet> editResp = restTemplate.exchange("/api/snippets/" + newSnippetId, HttpMethod.PATCH, editReq, Snippet.class);
+		ResponseEntity<Snippet> editResp = restTemplate.exchange(SNIPPETS_PATH + "/" + newSnippetId, HttpMethod.PATCH, editReq, Snippet.class);
         assertNotNull(editResp.getBody());
 		assertEquals("Edited snippet for Alice", editResp.getBody().getContents());
 
 		// Delete the new snippet
-		ResponseEntity<Void> deleteResp = restTemplate.exchange("/api/snippets/" + newSnippetId, HttpMethod.DELETE,
+		ResponseEntity<Void> deleteResp = restTemplate.exchange(SNIPPETS_PATH + "/" + newSnippetId, HttpMethod.DELETE,
 			new HttpEntity<>(aliceHeaders), Void.class);
 		assertEquals(HttpStatus.NO_CONTENT, deleteResp.getStatusCode());
 		assertFalse(snippetRepository.findById(newSnippetId).isPresent());
@@ -151,7 +155,7 @@ class JsnippetsApplicationTests {
         // Attempt to view Bob's snippet as Alice (should be forbidden)
         List<Snippet> bobSnippets = snippetRepository.findByPosterId(userRepository.findByUsername("bob").get().getId());
         Long bobSnippetId = bobSnippets.get(0).getId();
-        ResponseEntity<Snippet> forbiddenResp = restTemplate.exchange("/api/snippets/" + bobSnippetId, HttpMethod.GET,
+        ResponseEntity<Snippet> forbiddenResp = restTemplate.exchange(SNIPPETS_PATH + "/" + bobSnippetId, HttpMethod.GET,
 			new HttpEntity<>(aliceHeaders), Snippet.class);
         assertEquals(HttpStatus.NOT_FOUND, forbiddenResp.getStatusCode());
 	}

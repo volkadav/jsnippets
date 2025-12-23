@@ -6,6 +6,7 @@ import com.norrisjackson.jsnippets.data.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 
@@ -15,6 +16,7 @@ import java.util.Optional;
 
 @Service
 @Slf4j
+@Transactional(readOnly = true)
 public class SnippetService {
     private final SnippetRepository snippetRepository;
 
@@ -22,6 +24,7 @@ public class SnippetService {
         this.snippetRepository = snippetRepository;
     }
 
+    @Transactional
     public Snippet createSnippet(String snippetContent, User poster) {
         Snippet snippet = new Snippet();
         snippet.setContents(snippetContent);
@@ -78,6 +81,7 @@ public class SnippetService {
         return snippetRepository.findByPosterId(posterId, pageable);
     }
 
+    @Transactional
     public Optional<Snippet> updateSnippet(Long id, String updatedSnippetContents, User editor) {
         if (updatedSnippetContents == null || updatedSnippetContents.trim().isEmpty()) {
             log.warn("Attempted to update snippet with empty contents");
@@ -99,6 +103,7 @@ public class SnippetService {
         });
     }
 
+    @Transactional
     public boolean deleteSnippet(Long id, User deleter) {
         if (snippetRepository.existsById(id) && userOwnsSnippet(id, deleter.getId())) {
             snippetRepository.deleteById(id);

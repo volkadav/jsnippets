@@ -56,6 +56,10 @@ class AuthenticationControllerTest {
     private static final String TEST_PASSWORD = "password123";
     private static final String TEST_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.token";
 
+    // API paths (versioned)
+    private static final String AUTH_LOGIN_PATH = "/api/v1/auth/login";
+    private static final String AUTH_VALIDATE_PATH = "/api/v1/auth/validate";
+
     @BeforeEach
     void setUp() {
         // Set up MockMvc with standalone configuration (no Spring context)
@@ -83,7 +87,7 @@ class AuthenticationControllerTest {
         when(jwtUtil.generateToken(userDetails)).thenReturn(TEST_TOKEN);
 
         // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(AUTH_LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -105,7 +109,7 @@ class AuthenticationControllerTest {
                 .thenThrow(new BadCredentialsException("Bad credentials"));
 
         // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(AUTH_LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
@@ -121,7 +125,7 @@ class AuthenticationControllerTest {
         String requestJson = "{\"password\":\"password123\"}";
 
         // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(AUTH_LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isBadRequest());
@@ -135,7 +139,7 @@ class AuthenticationControllerTest {
         String requestJson = "{\"username\":\"testuser\"}";
 
         // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(AUTH_LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isBadRequest());
@@ -149,7 +153,7 @@ class AuthenticationControllerTest {
         AuthenticationRequest request = new AuthenticationRequest("", TEST_PASSWORD);
 
         // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(AUTH_LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -163,7 +167,7 @@ class AuthenticationControllerTest {
         AuthenticationRequest request = new AuthenticationRequest(TEST_USERNAME, "");
 
         // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(AUTH_LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -173,7 +177,7 @@ class AuthenticationControllerTest {
 
     @Test
     void login_WithEmptyBody_ReturnsBadRequest() throws Exception {
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(AUTH_LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest());
@@ -190,7 +194,7 @@ class AuthenticationControllerTest {
                 .thenThrow(new RuntimeException("Unexpected error"));
 
         // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(AUTH_LOGIN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
@@ -206,7 +210,7 @@ class AuthenticationControllerTest {
         when(jwtUtil.extractExpiration(TEST_TOKEN)).thenReturn(futureDate);
 
         // Act & Assert
-        mockMvc.perform(get("/api/auth/validate")
+        mockMvc.perform(get(AUTH_VALIDATE_PATH)
                         .header("Authorization", "Bearer " + TEST_TOKEN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid", is(true)))
@@ -225,7 +229,7 @@ class AuthenticationControllerTest {
         when(jwtUtil.validateToken(invalidToken)).thenReturn(false);
 
         // Act & Assert
-        mockMvc.perform(get("/api/auth/validate")
+        mockMvc.perform(get(AUTH_VALIDATE_PATH)
                         .header("Authorization", "Bearer " + invalidToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid", is(false)))
@@ -237,7 +241,7 @@ class AuthenticationControllerTest {
 
     @Test
     void validateToken_WithoutAuthorizationHeader_ReturnsBadRequest() throws Exception {
-        mockMvc.perform(get("/api/auth/validate"))
+        mockMvc.perform(get(AUTH_VALIDATE_PATH))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("Missing or invalid Authorization header")));
 
@@ -246,7 +250,7 @@ class AuthenticationControllerTest {
 
     @Test
     void validateToken_WithInvalidHeaderFormat_ReturnsBadRequest() throws Exception {
-        mockMvc.perform(get("/api/auth/validate")
+        mockMvc.perform(get(AUTH_VALIDATE_PATH)
                         .header("Authorization", "InvalidFormat " + TEST_TOKEN))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("Missing or invalid Authorization header")));
@@ -256,7 +260,7 @@ class AuthenticationControllerTest {
 
     @Test
     void validateToken_WithMissingBearer_ReturnsBadRequest() throws Exception {
-        mockMvc.perform(get("/api/auth/validate")
+        mockMvc.perform(get(AUTH_VALIDATE_PATH)
                         .header("Authorization", TEST_TOKEN))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("Missing or invalid Authorization header")));
@@ -270,7 +274,7 @@ class AuthenticationControllerTest {
         when(jwtUtil.validateToken(anyString())).thenThrow(new RuntimeException("Token validation error"));
 
         // Act & Assert
-        mockMvc.perform(get("/api/auth/validate")
+        mockMvc.perform(get(AUTH_VALIDATE_PATH)
                         .header("Authorization", "Bearer " + TEST_TOKEN))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error", is("Token validation failed")));
