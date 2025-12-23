@@ -6,6 +6,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -18,8 +20,11 @@ import java.util.function.Function;
 
 /**
  * Utility class for JWT token generation, validation, and extraction.
+ * This is a singleton bean that is thread-safe as it maintains no mutable state
+ * beyond the injected configuration values which are set once at startup.
  */
 @Component
+@Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 @Slf4j
 public class JwtUtil {
 

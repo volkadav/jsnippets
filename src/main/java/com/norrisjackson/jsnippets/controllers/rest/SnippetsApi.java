@@ -3,11 +3,14 @@ package com.norrisjackson.jsnippets.controllers.rest;
 import com.norrisjackson.jsnippets.configs.PaginationConfig;
 import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.User;
+import com.norrisjackson.jsnippets.controllers.rest.dto.ApiError;
+import com.norrisjackson.jsnippets.controllers.rest.dto.ErrorCodes;
 import com.norrisjackson.jsnippets.services.SnippetService;
 import com.norrisjackson.jsnippets.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -47,27 +50,32 @@ public class SnippetsApi {
         boolean hasError() { return errorResponse != null; }
     }
 
-    private UserOrError getCurrentUserOrError(UserDetails authedUser) {
+    private UserOrError getCurrentUserOrError(UserDetails authedUser, HttpServletRequest request) {
         if (authedUser == null) {
             log.error("No authenticated user present");
-            return new UserOrError(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null));
+            return new UserOrError(ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiError.of(ErrorCodes.AUTH_TOKEN_MISSING, "Authentication required", request.getRequestURI())));
         }
         Optional<User> userOpt = userService.getUserByUsername(authedUser.getUsername());
         if (userOpt.isEmpty()) {
             log.error("Authenticated user not found in database: {}", authedUser.getUsername());
-            return new UserOrError(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null));
+            return new UserOrError(ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiError.of(ErrorCodes.USER_NOT_FOUND, "User not found", request.getRequestURI())));
         }
         return new UserOrError(userOpt.get());
     }
 
     @GetMapping
     @Operation(summary = "Get paginated list of snippets for the authenticated user")
-    public ResponseEntity<Page<Snippet>> findAllForUser(
+    public ResponseEntity<?> findAllForUser(
                                      @AuthenticationPrincipal UserDetails authedUser,
                                      @Parameter(description = "Page number") @RequestParam("pageNumber") Optional<Integer> pageNumber,
-                                     @Parameter(description = "Page size") @RequestParam("pageSize") Optional<Integer> pageSize) {
-        UserOrError userOrError = getCurrentUserOrError(authedUser);
-        if (userOrError.hasError()) return (ResponseEntity<Page<Snippet>>) userOrError.errorResponse;
+                                     @Parameter(description = "Page size") @RequestParam("pageSize") Optional<Integer> pageSize,
+                                     HttpServletRequest request) {
+        UserOrError userOrError = getCurrentUserOrError(authedUser, request);
+        if (userOrError.hasError()) return userOrError.errorResponse;
         User currentUser = userOrError.user;
 
         int effectivePageSize = paginationConfig.getEffectivePageSize(pageSize.orElse(null));
@@ -80,80 +88,101 @@ public class SnippetsApi {
 
     @GetMapping("/{snippetId}")
     @Operation(summary = "Get a specific snippet by ID for the authenticated user")
-    public ResponseEntity<Snippet> findById(@AuthenticationPrincipal UserDetails authedUser,
-                                            @Parameter(description = "Snippet ID") @PathVariable("snippetId") Long snippetId) {
-        UserOrError userOrError = getCurrentUserOrError(authedUser);
-        if (userOrError.hasError()) return (ResponseEntity<Snippet>) userOrError.errorResponse;
+    public ResponseEntity<?> findById(@AuthenticationPrincipal UserDetails authedUser,
+                                      @Parameter(description = "Snippet ID") @PathVariable("snippetId") Long snippetId,
+                                      HttpServletRequest request) {
+        UserOrError userOrError = getCurrentUserOrError(authedUser, request);
+        if (userOrError.hasError()) return userOrError.errorResponse;
         User currentUser = userOrError.user;
 
         Optional<Snippet> s = snippetService.retrieveSnippetForUser(snippetId, currentUser.getId());
 
-        return s.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
+        return s.<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body(ApiError.of(ErrorCodes.SNIPPET_NOT_FOUND, "Snippet not found", request.getRequestURI())));
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @Operation(summary = "Create a new snippet for the authenticated user")
-    public ResponseEntity<Snippet> addSnippet(@AuthenticationPrincipal UserDetails authedUser,
-                                              @Parameter(description = "Snippet text contents") @RequestParam String contents) {
-        UserOrError userOrError = getCurrentUserOrError(authedUser);
-        if (userOrError.hasError()) return (ResponseEntity<Snippet>) userOrError.errorResponse;
+    public ResponseEntity<?> addSnippet(@AuthenticationPrincipal UserDetails authedUser,
+                                        @Parameter(description = "Snippet text contents") @RequestParam String contents,
+                                        HttpServletRequest request) {
+        UserOrError userOrError = getCurrentUserOrError(authedUser, request);
+        if (userOrError.hasError()) return userOrError.errorResponse;
         User currentUser = userOrError.user;
 
         if (Strings.isBlank(contents)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(ApiError.of(ErrorCodes.VALIDATION_ERROR, "Snippet contents cannot be empty", request.getRequestURI()));
         }
 
         Snippet newSnippet = snippetService.createSnippet(contents, currentUser);
-        return (newSnippet == null) ?
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null) :
-                ResponseEntity.status(HttpStatus.CREATED).body(newSnippet);
+        if (newSnippet == null) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiError.of(ErrorCodes.INTERNAL_ERROR, "Failed to create snippet", request.getRequestURI()));
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(newSnippet);
     }
 
     @PatchMapping(path = "/{snippetId}", consumes = "application/json")
     @Operation(summary = "Edit an existing snippet by ID for the authenticated user")
-    public ResponseEntity<Snippet> editSnippet(
+    public ResponseEntity<?> editSnippet(
             @AuthenticationPrincipal UserDetails authedUser,
             @Parameter(description = "Snippet ID") @PathVariable("snippetId") Long snippetId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON body with fields to update")
-            @RequestBody Map<String, String> updates) {
+            @RequestBody Map<String, String> updates,
+            HttpServletRequest request) {
 
-        UserOrError userOrError = getCurrentUserOrError(authedUser);
-        if (userOrError.hasError()) return (ResponseEntity<Snippet>) userOrError.errorResponse;
+        UserOrError userOrError = getCurrentUserOrError(authedUser, request);
+        if (userOrError.hasError()) return userOrError.errorResponse;
         User currentUser = userOrError.user;
 
         String newContents = updates.get("contents");
         if (newContents == null || newContents.isBlank()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(ApiError.of(ErrorCodes.VALIDATION_ERROR, "Snippet contents cannot be empty", request.getRequestURI()));
         }
 
         if (!snippetService.userOwnsSnippet(snippetId, currentUser.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(ApiError.of(ErrorCodes.FORBIDDEN, "You do not have permission to edit this snippet", request.getRequestURI()));
         }
 
         Optional<Snippet> updated = snippetService.updateSnippet(snippetId, newContents, currentUser);
-        return updated.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null));
+        return updated.<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(ApiError.of(ErrorCodes.INVALID_REQUEST, "Failed to update snippet", request.getRequestURI())));
     }
 
     @DeleteMapping("/{snippetId}")
     @Operation(summary = "Delete a snippet by ID for the authenticated user")
-    public ResponseEntity<Void> deleteSnippet(@AuthenticationPrincipal UserDetails authedUser,
-                                              @Parameter(description = "Snippet ID") @PathVariable Long snippetId) {
-        UserOrError userOrError = getCurrentUserOrError(authedUser);
+    public ResponseEntity<?> deleteSnippet(@AuthenticationPrincipal UserDetails authedUser,
+                                           @Parameter(description = "Snippet ID") @PathVariable Long snippetId,
+                                           HttpServletRequest request) {
+        UserOrError userOrError = getCurrentUserOrError(authedUser, request);
         if (userOrError.hasError()) {
-            return (ResponseEntity<Void>) userOrError.errorResponse;
+            return userOrError.errorResponse;
         }
         User currentUser = userOrError.user;
         if (!snippetService.userOwnsSnippet(snippetId, currentUser.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(ApiError.of(ErrorCodes.FORBIDDEN, "You do not have permission to delete this snippet", request.getRequestURI()));
         }
         try {
             snippetService.deleteSnippet(snippetId, currentUser);
             return ResponseEntity.noContent().build(); // 204 No Content
         } catch (EmptyResultDataAccessException e) {
             log.warn("someone tried to delete a snippet with id {} that doesn't exist", snippetId);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(ApiError.of(ErrorCodes.SNIPPET_NOT_FOUND, "Snippet not found", request.getRequestURI()));
         }
     }
 }

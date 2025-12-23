@@ -13,7 +13,7 @@ import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.data.SnippetRepository;
 import com.norrisjackson.jsnippets.data.UserRepository;
-import com.norrisjackson.jsnippets.security.dto.AuthenticationRequest;
+import com.norrisjackson.jsnippets.controllers.rest.dto.AuthenticationRequest;
 
 import java.util.List;
 import java.util.Map;

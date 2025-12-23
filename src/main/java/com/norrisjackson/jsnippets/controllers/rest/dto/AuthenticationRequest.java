@@ -1,4 +1,4 @@
-package com.norrisjackson.jsnippets.security.dto;
+package com.norrisjackson.jsnippets.controllers.rest.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

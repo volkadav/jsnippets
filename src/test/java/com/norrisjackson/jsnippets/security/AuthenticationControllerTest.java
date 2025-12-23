@@ -2,7 +2,7 @@ package com.norrisjackson.jsnippets.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.norrisjackson.jsnippets.controllers.rest.AuthenticationController;
-import com.norrisjackson.jsnippets.security.dto.AuthenticationRequest;
+import com.norrisjackson.jsnippets.controllers.rest.dto.AuthenticationRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -113,7 +113,8 @@ class AuthenticationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error", is("Invalid username or password")));
+                .andExpect(jsonPath("$.code", is("AUTH_INVALID_CREDENTIALS")))
+                .andExpect(jsonPath("$.message", is("Invalid username or password")));
 
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(jwtUtil, never()).generateToken(any());
@@ -198,7 +199,8 @@ class AuthenticationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.error", is("Authentication failed")));
+                .andExpect(jsonPath("$.code", is("AUTH_FAILED")))
+                .andExpect(jsonPath("$.message", is("Authentication failed")));
     }
 
     @Test
@@ -243,7 +245,8 @@ class AuthenticationControllerTest {
     void validateToken_WithoutAuthorizationHeader_ReturnsBadRequest() throws Exception {
         mockMvc.perform(get(AUTH_VALIDATE_PATH))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", is("Missing or invalid Authorization header")));
+                .andExpect(jsonPath("$.code", is("AUTH_TOKEN_MISSING")))
+                .andExpect(jsonPath("$.message", is("Missing or invalid Authorization header")));
 
         verify(jwtUtil, never()).validateToken(anyString());
     }
@@ -253,7 +256,8 @@ class AuthenticationControllerTest {
         mockMvc.perform(get(AUTH_VALIDATE_PATH)
                         .header("Authorization", "InvalidFormat " + TEST_TOKEN))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", is("Missing or invalid Authorization header")));
+                .andExpect(jsonPath("$.code", is("AUTH_TOKEN_MISSING")))
+                .andExpect(jsonPath("$.message", is("Missing or invalid Authorization header")));
 
         verify(jwtUtil, never()).validateToken(anyString());
     }
@@ -263,7 +267,8 @@ class AuthenticationControllerTest {
         mockMvc.perform(get(AUTH_VALIDATE_PATH)
                         .header("Authorization", TEST_TOKEN))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", is("Missing or invalid Authorization header")));
+                .andExpect(jsonPath("$.code", is("AUTH_TOKEN_MISSING")))
+                .andExpect(jsonPath("$.message", is("Missing or invalid Authorization header")));
 
         verify(jwtUtil, never()).validateToken(anyString());
     }
@@ -277,6 +282,7 @@ class AuthenticationControllerTest {
         mockMvc.perform(get(AUTH_VALIDATE_PATH)
                         .header("Authorization", "Bearer " + TEST_TOKEN))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error", is("Token validation failed")));
+                .andExpect(jsonPath("$.code", is("AUTH_TOKEN_INVALID")))
+                .andExpect(jsonPath("$.message", is("Token validation failed")));
     }
 }

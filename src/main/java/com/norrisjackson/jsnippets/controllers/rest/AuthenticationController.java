@@ -1,10 +1,13 @@
 package com.norrisjackson.jsnippets.controllers.rest;
 
 import com.norrisjackson.jsnippets.security.JwtUtil;
-import com.norrisjackson.jsnippets.security.dto.AuthenticationRequest;
-import com.norrisjackson.jsnippets.security.dto.AuthenticationResponse;
+import com.norrisjackson.jsnippets.controllers.rest.dto.ApiError;
+import com.norrisjackson.jsnippets.controllers.rest.dto.AuthenticationRequest;
+import com.norrisjackson.jsnippets.controllers.rest.dto.AuthenticationResponse;
+import com.norrisjackson.jsnippets.controllers.rest.dto.ErrorCodes;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,10 +48,10 @@ public class AuthenticationController {
      */
     @PostMapping("/login")
     @Operation(summary = "Authenticate user and receive JWT token")
-    public ResponseEntity<?> login(@Valid @RequestBody AuthenticationRequest request) {
-        try {
-            log.info("Authentication attempt for user: {}", request.getUsername());
+    public ResponseEntity<?> login(@Valid @RequestBody AuthenticationRequest request, HttpServletRequest httpRequest) {
+        log.info("Authentication attempt for user: {}", request.getUsername());
 
+        try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
@@ -66,14 +69,22 @@ public class AuthenticationController {
 
         } catch (BadCredentialsException e) {
             log.warn("Failed authentication attempt for user: {}", request.getUsername());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Invalid username or password");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiError.of(
+                            ErrorCodes.AUTH_INVALID_CREDENTIALS,
+                            "Invalid username or password",
+                            httpRequest.getRequestURI()
+                    ));
         } catch (Exception e) {
             log.error("Authentication error for user {}: {}", request.getUsername(), e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Authentication failed");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiError.of(
+                            ErrorCodes.AUTH_FAILED,
+                            "Authentication failed",
+                            httpRequest.getRequestURI()
+                    ));
         }
     }
 
@@ -82,32 +93,43 @@ public class AuthenticationController {
      */
     @GetMapping("/validate")
     @Operation(summary = "Validate JWT token")
-    public ResponseEntity<?> validateToken(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+    public ResponseEntity<?> validateToken(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            HttpServletRequest httpRequest) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(ApiError.of(
+                            ErrorCodes.AUTH_TOKEN_MISSING,
+                            "Missing or invalid Authorization header",
+                            httpRequest.getRequestURI()
+                    ));
+        }
+
         try {
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                boolean isValid = jwtUtil.validateToken(token);
+            String token = authHeader.substring(7);
+            boolean isValid = jwtUtil.validateToken(token);
 
-                Map<String, Object> response = new HashMap<>();
-                response.put("valid", isValid);
+            Map<String, Object> response = new HashMap<>();
+            response.put("valid", isValid);
 
-                if (isValid) {
-                    response.put("username", jwtUtil.extractUsername(token));
-                    response.put("expiresAt", jwtUtil.extractExpiration(token));
-                }
-
-                return ResponseEntity.ok(response);
+            if (isValid) {
+                response.put("username", jwtUtil.extractUsername(token));
+                response.put("expiresAt", jwtUtil.extractExpiration(token));
             }
 
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Missing or invalid Authorization header");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             log.error("Token validation error: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Token validation failed");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiError.of(
+                            ErrorCodes.AUTH_TOKEN_INVALID,
+                            "Token validation failed",
+                            httpRequest.getRequestURI()
+                    ));
         }
     }
 }

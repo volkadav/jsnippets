@@ -5,7 +5,7 @@ import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.SnippetRepository;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.data.UserRepository;
-import com.norrisjackson.jsnippets.security.dto.AuthenticationRequest;
+import com.norrisjackson.jsnippets.controllers.rest.dto.AuthenticationRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -141,7 +141,8 @@ class SnippetsApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error", is("Invalid username or password")));
+                .andExpect(jsonPath("$.code", is("AUTH_INVALID_CREDENTIALS")))
+                .andExpect(jsonPath("$.message", is("Invalid username or password")));
     }
 
     @Test
@@ -152,7 +153,8 @@ class SnippetsApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error", is("Invalid username or password")));
+                .andExpect(jsonPath("$.code", is("AUTH_INVALID_CREDENTIALS")))
+                .andExpect(jsonPath("$.message", is("Invalid username or password")));
     }
 
     @Test
@@ -180,7 +182,8 @@ class SnippetsApiIntegrationTest {
     void validateToken_WithoutAuthHeader_ReturnsBadRequest() throws Exception {
         mockMvc.perform(get(AUTH_VALIDATE_PATH))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", is("Missing or invalid Authorization header")));
+                .andExpect(jsonPath("$.code", is("AUTH_TOKEN_MISSING")))
+                .andExpect(jsonPath("$.message", is("Missing or invalid Authorization header")));
     }
 
     // ==================== JWT with Snippets API Tests ====================
