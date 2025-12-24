@@ -15,12 +15,19 @@ import java.util.Optional;
 @Controller
 @Slf4j
 public class Register {
-    private UserService userSvc;
+    private final UserService userSvc;
 
     public Register(UserService userSvc) {
         this.userSvc = userSvc;
     }
 
+    /**
+     * Display the user registration page.
+     *
+     * @param error optional error parameter for displaying validation errors
+     * @param model the Spring MVC model
+     * @return the register view name
+     */
     @GetMapping("/register")
     String register(@RequestParam(required = false) String error, Model model) {
         if (!StringUtils.isBlank(error)) {
@@ -38,6 +45,15 @@ public class Register {
         return "register";
     }
 
+    /**
+     * Handle user registration form submission.
+     *
+     * @param username  the chosen username
+     * @param password  the user's password
+     * @param password2 password confirmation
+     * @param email     the user's email address
+     * @return redirect URL (to login on success, back to register with error on failure)
+     */
     @PostMapping("/register")
     String handleRegister(@RequestParam String username,
                           @RequestParam String password,

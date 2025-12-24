@@ -1,11 +1,10 @@
 package com.norrisjackson.jsnippets.controllers;
 
+import com.norrisjackson.jsnippets.configs.PaginationConfig;
 import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.SnippetService;
-
 import com.norrisjackson.jsnippets.services.UserService;
-import com.norrisjackson.jsnippets.configs.PaginationConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
@@ -33,7 +32,16 @@ public class Snippets {
         this.paginationConfig = paginationConfig;
     }
 
-    // List all snippets
+    /**
+     * Display a paginated list of snippets for a user.
+     *
+     * @param username optional username to view (defaults to current user)
+     * @param page     optional page number
+     * @param size     optional page size
+     * @param sortDir  optional sort direction ("asc" or "desc")
+     * @param model    the Spring MVC model
+     * @return the snippet list view name
+     */
     @PreAuthorize("isAuthenticated()")
     @GetMapping({"/snippets", "/snippets/{username}"})
     String snippets(@PathVariable(name = "username", required = false) String username,
@@ -87,14 +95,25 @@ public class Snippets {
         return "snippet/list";
     }
 
-    // Create a new snippet -- form display
+    /**
+     * Display the form for creating a new snippet.
+     *
+     * @param model the Spring MVC model
+     * @return the new snippet form view name
+     */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/snippets/new")
     String newSnippet(Model model) {
         return "snippet/new";
     }
 
-    // Create a new snippet -- form handling
+    /**
+     * Handle new snippet form submission.
+     *
+     * @param contents the snippet contents
+     * @param model the Spring MVC model
+     * @return redirect URL
+     */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/snippets/new")
     String handleNewSnippet(@RequestParam String contents, Model model) {
@@ -105,7 +124,13 @@ public class Snippets {
         return "redirect:/snippets";
     }
 
-    // View a specific snippet
+    /**
+     * View a single snippet by ID.
+     *
+     * @param id the snippet ID
+     * @param model the Spring MVC model
+     * @return the snippet view name
+     */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/snippet/{id}")
     String viewSnippet(@PathVariable(name="id") Long id, Model model) {
@@ -125,7 +150,13 @@ public class Snippets {
         return "snippet/view";
     }
 
-    // Edit a specific snippet -- form display
+    /**
+     * Display the form for editing a snippet.
+     *
+     * @param id the snippet ID
+     * @param model the Spring MVC model
+     * @return the edit snippet form view name
+     */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/snippet/{id}/edit")
     String editSnippet(@PathVariable(name="id") Long id, Model model) {
@@ -145,7 +176,14 @@ public class Snippets {
         return "snippet/edit";
     }
 
-    // Edit a specific snippet -- form handling
+    /**
+     * Handle snippet edit form submission.
+     *
+     * @param id the snippet ID
+     * @param contents the updated snippet contents
+     * @param model the Spring MVC model
+     * @return redirect URL
+     */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/snippet/{id}/edit")
     String handleEditSnippet(@PathVariable(name="id") Long id, @RequestParam String contents, Model model) {
@@ -163,7 +201,13 @@ public class Snippets {
         return "redirect:/snippet/" + id;
     }
 
-    // Delete a specific snippet -- form display
+    /**
+     * Display the snippet deletion confirmation page.
+     *
+     * @param id the snippet ID
+     * @param model the Spring MVC model
+     * @return the delete confirmation view name
+     */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/snippet/{id}/delete")
     String deleteSnippet(@PathVariable(name="id") Long id, Model model) {
@@ -185,7 +229,13 @@ public class Snippets {
         return "snippet/delete";
     }
 
-    // Delete a specific snippet -- form handling
+    /**
+     * Handle snippet deletion form submission.
+     *
+     * @param id the snippet ID
+     * @param model the Spring MVC model
+     * @return redirect URL
+     */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/snippet/{id}/delete")
     String handleDeleteSnippet(@PathVariable(name="id") Long id, Model model) {

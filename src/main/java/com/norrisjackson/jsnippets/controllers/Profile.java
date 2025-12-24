@@ -24,6 +24,14 @@ public class Profile {
         this.userService = userService;
     }
 
+    /**
+     * Display the user profile page.
+     *
+     * @param success optional success message parameter
+     * @param error   optional error message parameter
+     * @param model   the Spring MVC model
+     * @return the profile view name
+     */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/profile")
     String profile(@RequestParam(required = false) String success,
@@ -58,6 +66,14 @@ public class Profile {
         return "profile";
     }
 
+    /**
+     * Handle profile update form submission.
+     *
+     * @param email the updated email address
+     * @param timezone the updated timezone
+     * @param model the Spring MVC model
+     * @return redirect URL
+     */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/profile")
     String handleProfileUpdate(@RequestParam String email,

@@ -14,7 +14,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
@@ -31,6 +30,15 @@ public class Index {
         this.snippetService = snippetService;
     }
 
+    /**
+     * Display the main index/home page.
+     * Shows paginated snippets for authenticated users.
+     *
+     * @param page  optional page number
+     * @param size  optional page size
+     * @param model the Spring MVC model
+     * @return the view name
+     */
     @GetMapping({"/", "/index"})
     public String index(@RequestParam(required = false) Integer page,
                         @RequestParam(required = false) Integer size,

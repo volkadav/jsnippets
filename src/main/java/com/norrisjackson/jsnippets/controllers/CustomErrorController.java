@@ -25,6 +25,13 @@ public class CustomErrorController implements ErrorController {
         this.errorAttributes = errorAttributes;
     }
 
+    /**
+     * Handle error requests and display a custom error page.
+     *
+     * @param request the HTTP servlet request
+     * @param model   the Spring MVC model
+     * @return the error view name
+     */
     @RequestMapping("/error")
     public String handleError(HttpServletRequest request, Model model) {
         ServletWebRequest webRequest = new ServletWebRequest(request);
@@ -51,4 +58,3 @@ public class CustomErrorController implements ErrorController {
         return "error";
     }
 }
-
