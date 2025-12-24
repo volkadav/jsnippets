@@ -23,9 +23,9 @@ FROM amazoncorretto:17-alpine
 # Metadata labels
 LABEL org.opencontainers.image.title="jsnippets"
 LABEL org.opencontainers.image.name="norrisjackson.com/jsnippets"
-LABEL org.opencontainers.image.description="Snippets Server - A code snippet sharing platform"
+LABEL org.opencontainers.image.description="Snippets Server - A progress snippet sharing platform"
 LABEL org.opencontainers.image.version="0.0.1-SNAPSHOT"
-LABEL org.opencontainers.image.created="2025-12-21"
+LABEL org.opencontainers.image.created="2025-12-24"
 
 # Create non-root user for security
 RUN addgroup -S spring && adduser -S spring -G spring
@@ -46,15 +46,15 @@ EXPOSE 8080
 
 # Health check (optional but recommended)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
 # JVM optimization flags
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
-  -XX:MaxRAMPercentage=75.0 \
-  -XX:InitialRAMPercentage=50.0 \
-  -XX:+UseG1GC \
-  -XX:+OptimizeStringConcat \
-  -Djava.security.egd=file:/dev/./urandom"
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:InitialRAMPercentage=50.0 \
+    -XX:+UseG1GC \
+    -XX:+OptimizeStringConcat \
+    -Djava.security.egd=file:/dev/./urandom"
 
 # Run the application with optimized JVM settings
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
