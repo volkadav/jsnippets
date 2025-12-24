@@ -17,7 +17,7 @@ web ui and rest api stood up.
 
 ## outstanding TODOs
 
-- start email support (periodic reports? submission via email?)
+- cut a first release, i'm not completely embarrassed by it so i guess it's v1.0?
 
 ## future work ideas
 
@@ -160,13 +160,13 @@ Produces `norrisjackson.com/jsnippets:latest` using Paketo buildpacks (~400-500M
 
 ## run requirements
 
-- jre 17+ (tested with 21)
+- jre 17+ (tested with 17, 21, and 25)
 - postgresql (anything recent, say 10+)
 - mail server (optional)
 
 ## build requirements
 
-- jdk 17+ (tested with 21)
+- jdk 17+ (tested with 17, 21, and 25)
 - maven 3
 
 ## documentation
