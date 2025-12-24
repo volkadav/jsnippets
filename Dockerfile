@@ -17,8 +17,8 @@ COPY src ./src
 # Build the application
 RUN ./mvnw clean package -DskipTests
 
-# Runtime stage - use JRE-only Alpine image (smaller and more secure)
-FROM amazoncorretto:17-alpine-jre
+# Runtime stage
+FROM amazoncorretto:17-alpine
 
 # Metadata labels
 LABEL org.opencontainers.image.title="jsnippets"
@@ -50,11 +50,11 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
 
 # JVM optimization flags
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
-    -XX:MaxRAMPercentage=75.0 \
-    -XX:InitialRAMPercentage=50.0 \
-    -XX:+UseG1GC \
-    -XX:+OptimizeStringConcat \
-    -Djava.security.egd=file:/dev/./urandom"
+  -XX:MaxRAMPercentage=75.0 \
+  -XX:InitialRAMPercentage=50.0 \
+  -XX:+UseG1GC \
+  -XX:+OptimizeStringConcat \
+  -Djava.security.egd=file:/dev/./urandom"
 
 # Run the application with optimized JVM settings
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
