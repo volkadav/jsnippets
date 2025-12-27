@@ -20,4 +20,3 @@ CREATE INDEX idx_followers_created_at ON followers(created_at DESC);
 -- Composite indexes for common query patterns
 CREATE INDEX idx_followers_follower_created ON followers(follower_id, created_at DESC);
 CREATE INDEX idx_followers_followed_created ON followers(followed_id, created_at DESC);
-

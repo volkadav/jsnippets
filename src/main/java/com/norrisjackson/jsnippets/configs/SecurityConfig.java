@@ -2,6 +2,7 @@ package com.norrisjackson.jsnippets.configs;
 
 import com.norrisjackson.jsnippets.security.JwtAuthenticationFilter;
 import com.norrisjackson.jsnippets.security.RateLimitingFilter;
+import com.norrisjackson.jsnippets.security.CustomAuthenticationFailureHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -23,10 +24,12 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RateLimitingFilter rateLimitingFilter;
+    private final CustomAuthenticationFailureHandler failureHandler;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, RateLimitingFilter rateLimitingFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, RateLimitingFilter rateLimitingFilter, CustomAuthenticationFailureHandler failureHandler) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.rateLimitingFilter = rateLimitingFilter;
+        this.failureHandler = failureHandler;
     }
 
     /**
@@ -79,7 +82,7 @@ public class SecurityConfig {
                             "/webjars/**", "/css/**", "/js/**", "/images/**",
                             "/favicon.ico", "/actuator", "/actuator/health/**", "/actuator/info").permitAll()
                     .anyRequest().authenticated())
-            .formLogin(form -> form.loginPage("/login").permitAll())
+            .formLogin(form -> form.loginPage("/login").failureHandler(failureHandler).permitAll())
             .logout(LogoutConfigurer::permitAll);
         return http.build();
     }

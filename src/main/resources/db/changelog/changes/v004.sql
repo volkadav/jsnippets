@@ -19,8 +19,3 @@ CREATE TABLE processed_emails
 CREATE INDEX idx_processed_emails_message_id ON processed_emails (message_id);
 CREATE INDEX idx_processed_emails_processed_at ON processed_emails (processed_at);
 CREATE INDEX idx_processed_emails_sender ON processed_emails (sender_email);
-
--- changeset jsnippets:v004-3
--- Add index on users.email for efficient lookup by sender email
-CREATE INDEX idx_users_email ON users (email);
-
