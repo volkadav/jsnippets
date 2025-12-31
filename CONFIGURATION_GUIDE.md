@@ -113,6 +113,55 @@ export PG_USER=jsnippets_user
 export PG_PASS=your-secure-password
 ```
 
+## Session Storage Configuration
+
+The application supports two session storage modes:
+
+### In-Memory Sessions (Default)
+
+Simple single-server deployments can use the default in-memory session storage:
+
+```bash
+# Default - no additional configuration needed
+SESSION_STORE_TYPE=none
+```
+
+**Pros**: Simple, no additional services required  
+**Cons**: Sessions are lost on restart, doesn't support multi-server deployments
+
+### Redis/Valkey Sessions
+
+For multi-server deployments or session persistence, use Redis or Valkey:
+
+```bash
+# Enable Redis session storage
+SESSION_STORE_TYPE=redis
+REDIS_HOST=your-redis-host
+REDIS_PORT=6379
+REDIS_PASSWORD=your-redis-password  # Optional
+REDIS_DATABASE=0                     # Optional, 0-15
+SESSION_TIMEOUT=30m                  # Optional, default 30 minutes
+SESSION_REDIS_NAMESPACE=jsnippets:session  # Optional
+```
+
+**Pros**: Sessions persist across restarts, supports load balancing, enables horizontal scaling  
+**Cons**: Requires additional Redis/Valkey service
+
+### Docker Compose Configurations
+
+Two Docker Compose files are provided:
+
+1. **`docker-compose.yml`** - Full deployment with Valkey for session storage
+2. **`docker-compose-simple.yml`** - Simple deployment with in-memory sessions
+
+```bash
+# Full deployment with session storage
+podman-compose -f docker-compose.yml up -d
+
+# Simple deployment without Redis
+podman-compose -f docker-compose-simple.yml up -d
+```
+
 ## Key Differences Summary
 
 | Setting | Default/Prod | Development | Test |

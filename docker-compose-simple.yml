@@ -1,3 +1,6 @@
+# Docker Compose configuration for simple single-server deployment
+# Uses in-memory session storage (no Redis/Valkey required)
+
 services:
   # PostgreSQL Database
   db:
@@ -19,26 +22,6 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
-
-  # Valkey (Redis-compatible) for Session Storage
-  # Comment out this service if you want to use in-memory sessions instead
-  session-store:
-    image: valkey/valkey:8-alpine
-    container_name: jsnippets-session
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
-    volumes:
-      - session_data:/data
-    networks:
-      - jsnippets-network
-    healthcheck:
-      test: ["CMD", "valkey-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-    # Optional: enable persistence
-    command: valkey-server --appendonly yes
 
   # JSnippets Application
   app:
@@ -66,19 +49,14 @@ services:
       PG_PASS: ${DB_PASSWORD:-password}
 
       # Session Storage Configuration
-      # Set to 'redis' to use Valkey/Redis, 'none' for in-memory
-      SESSION_STORE_TYPE: ${SESSION_STORE_TYPE:-redis}
-      REDIS_HOST: session-store
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      # Use in-memory sessions (suitable for single-server deployments)
+      SESSION_STORE_TYPE: none
       SESSION_TIMEOUT: ${SESSION_TIMEOUT:-30m}
 
       # JVM Options (can be overridden)
       JAVA_OPTS: ${JAVA_OPTS:--XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0 -XX:+UseG1GC}
     depends_on:
       db:
-        condition: service_healthy
-      session-store:
         condition: service_healthy
     networks:
       - jsnippets-network
@@ -114,5 +92,4 @@ networks:
 volumes:
   postgres_data:
     driver: local
-  session_data:
-    driver: local
+
