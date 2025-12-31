@@ -100,5 +100,18 @@ class ActuatorHealthCheckTest {
                 "Actuator should list endpoints or links");
         }
     }
-}
 
+    @Test
+    void healthEndpointShouldIncludeMemoryStats() {
+        // When
+        ResponseEntity<String> response = restTemplate.getForEntity("/actuator/health", String.class);
+
+        // Then
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().contains("memory"),
+            "Health check should include memory indicator");
+        assertTrue(response.getBody().contains("heap"),
+            "Memory health should include heap information");
+    }
+}

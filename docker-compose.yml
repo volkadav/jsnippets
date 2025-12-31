@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   db:
@@ -49,7 +47,15 @@ services:
     networks:
       - jsnippets-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/actuator/health",
+        ]
       interval: 30s
       timeout: 3s
       retries: 3
@@ -59,11 +65,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
-          memory: 512M
+          cpus: "2.0"
+          memory: 2048M
         reservations:
-          cpus: '0.5'
-          memory: 256M
+          cpus: "0.5"
+          memory: 1024M
 
 networks:
   jsnippets-network:
@@ -72,4 +78,3 @@ networks:
 volumes:
   postgres_data:
     driver: local
-
