@@ -3,8 +3,8 @@
 ## Quick Start
 
 ### Prerequisites
-- Docker 20.10+ installed
-- Docker Compose 2.0+ installed
+- Docker 20.10+ and Docker Compose 2.0+ installed if using Docker/Docker Compose
+- Podman 5.0+ (tested version) if using Podman
 - 512MB+ RAM available
 - Ports 8080 and 5432 available (or configure custom ports)
 
@@ -44,6 +44,27 @@
 ## Manual Docker Commands
 
 ### Build the Image
+
+**Recommended: Use the build script**
+```bash
+./build-image.sh
+```
+
+This automatically sets OCI-compliant image labels with:
+- Build timestamp
+- Version from pom.xml
+- Git commit hash
+
+**Or build manually with metadata:**
+```bash
+docker build \
+  --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
+  --build-arg APP_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout) \
+  --build-arg VCS_REF=$(git rev-parse --short HEAD) \
+  -t jsnippets:latest .
+```
+
+**Simple build (without metadata):**
 ```bash
 docker build -t jsnippets:latest .
 ```
@@ -100,6 +121,12 @@ docker-compose up
 docker-compose up -d
 
 # Start and rebuild if needed
+docker-compose up -d --build
+
+# Build with dynamic OCI metadata labels
+BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
+APP_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout) \
+VCS_REF=$(git rev-parse --short HEAD) \
 docker-compose up -d --build
 ```
 

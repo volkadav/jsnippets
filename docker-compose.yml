@@ -25,6 +25,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-unknown}
+        APP_VERSION: ${APP_VERSION:-unknown}
+        VCS_REF: ${VCS_REF:-unknown}
     container_name: jsnippets-app
     ports:
       - "${APP_PORT:-8080}:8080"

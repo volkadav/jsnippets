@@ -157,7 +157,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<image>
-						<name>norrisjackson.com/${project.artifactId}</name>
+						<name>${project.artifactId}</name>
 						<builder>paketobuildpacks/builder-noble-java-tiny:latest</builder>
 					</image>
 					<docker>

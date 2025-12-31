@@ -103,8 +103,9 @@ cp .env.example .env
 # 2. Set secure password in .env
 echo "DB_PASSWORD=your_secure_password" >> .env
 
-# 3. Start application and database
-docker-compose up -d
+# 3. Build with dynamic metadata and start (podman or docker)
+./build-image.sh
+docker-compose up -d # or podman-compose up -d
 
 # 4. Access application
 open http://localhost:8080
@@ -113,8 +114,15 @@ open http://localhost:8080
 ### manual docker build and run
 
 ```bash
-# Build optimized JRE-only image (~200MB)
-docker build -t jsnippets:latest .
+# Recommended: Use build script with dynamic OCI metadata
+./build-image.sh
+
+# Or build manually with dynamic labels
+docker build \
+  --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
+  --build-arg APP_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout) \
+  --build-arg VCS_REF=$(git rev-parse --short HEAD) \
+  -t jsnippets:latest .
 
 # Run with external database
 docker run -d -p 8080:8080 \
@@ -138,17 +146,32 @@ Find jar file in `target/jsnippets-{version}.jar`
 ### container image (dockerfile)
 
 ```bash
-# Recommended: Optimized multi-stage build with JRE-only Alpine
+# Recommended: Use the build script for proper OCI metadata
+./build-image.sh
+
+# Build script options:
+./build-image.sh --no-cache   # Force rebuild without cache
+./build-image.sh --push       # Build and push to registry
+
+# Or build manually with dynamic labels
+docker build \
+  --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
+  --build-arg APP_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout) \
+  --build-arg VCS_REF=$(git rev-parse --short HEAD) \
+  -t jsnippets:latest .
+
+# Simple build (without metadata)
 docker build -t jsnippets:latest .
 ```
 
-This produces a ~200MB image with:
-- Amazon Corretto 17 JRE (Alpine Linux)
-- Non-root user execution
-- Health checks for orchestration
-- JVM optimized for containers
+The build script automatically:
+- Detects podman or docker
+- Extracts version from pom.xml
+- Adds git commit hash (marks `-dirty` if uncommitted changes)
+- Sets OCI-compliant image labels (version, created date, revision, etc.)
+- Tags image with both version number and `latest`
 
-See [DOCKERFILE_IMPROVEMENTS.md](DOCKERFILE_IMPROVEMENTS.md) for technical details.
+Produces `jsnippets:latest` using a multi-stage Dockerfile (~350MB).
 
 ### alternative: spring boot buildpack
 
@@ -156,11 +179,11 @@ See [DOCKERFILE_IMPROVEMENTS.md](DOCKERFILE_IMPROVEMENTS.md) for technical detai
 mvn clean spring-boot:build-image
 ```
 
-Produces `norrisjackson.com/jsnippets:latest` using Paketo buildpacks (~400-500MB).
+Produces `jsnippets:latest` using Paketo buildpack (~400-500MB).
 
 ## run requirements
 
-- jre 17+ (tested with 17, 21, and 25)
+- jre 17+ (tested with 17, 21, and 25; docker images use 21)
 - postgresql (anything recent, say 10+)
 - mail server (optional)
 
