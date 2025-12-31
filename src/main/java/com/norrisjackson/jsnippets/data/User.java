@@ -14,7 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 @RequiredArgsConstructor
-@ToString
+@ToString(exclude = {"followedUsers", "followers"})
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

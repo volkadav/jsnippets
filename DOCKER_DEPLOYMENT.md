@@ -50,10 +50,10 @@
 ./build-image.sh
 ```
 
-This automatically sets OCI-compliant image labels with:
-- Build timestamp
-- Version from pom.xml
-- Git commit hash
+This automatically:
+- Sets OCI-compliant image labels (build timestamp, version from pom.xml, git commit hash)
+- Computes a hash of source files to ensure the build step runs when source changes
+- Caches Maven dependencies for faster subsequent builds
 
 **Or build manually with metadata:**
 ```bash
@@ -61,6 +61,7 @@ docker build \
   --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
   --build-arg APP_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout) \
   --build-arg VCS_REF=$(git rev-parse --short HEAD) \
+  --build-arg CACHEBUST=$(date +%s) \
   -t jsnippets:latest .
 ```
 
@@ -120,14 +121,21 @@ docker-compose up
 # Start in background
 docker-compose up -d
 
-# Start and rebuild if needed
+# Start and rebuild if needed (may use cached build if source unchanged)
 docker-compose up -d --build
 
-# Build with dynamic OCI metadata labels
+# Rebuild with fresh source (recommended after code changes)
+CACHEBUST=$(date +%s) docker-compose up -d --build
+
+# Build with full OCI metadata labels
 BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
 APP_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout) \
 VCS_REF=$(git rev-parse --short HEAD) \
+CACHEBUST=$(date +%s) \
 docker-compose up -d --build
+
+# Force complete rebuild (no cache at all)
+docker-compose build --no-cache && docker-compose up -d
 ```
 
 ### Stop Services

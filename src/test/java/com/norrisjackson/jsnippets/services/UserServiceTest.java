@@ -255,13 +255,16 @@ class UserServiceTest {
         toFollow.setId(2L);
         toFollow.setUsername("toFollow");
 
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        // Mock repository to return false for isFollowing (not yet following)
+        when(userRepository.isFollowing(1L, 2L)).thenReturn(false);
+        // Mock repository to return the follower with eagerly loaded followedUsers
+        when(userRepository.findByIdWithFollowedUsers(1L)).thenReturn(Optional.of(follower));
 
         boolean result = userService.followUser(follower, toFollow);
 
         assertThat(result).isTrue();
         assertThat(follower.getFollowedUsers()).contains(toFollow);
-        verify(userRepository, times(1)).save(follower);
+        // No save() call expected - @Transactional auto-flushes managed entities
     }
 
     @Test
@@ -275,6 +278,9 @@ class UserServiceTest {
         toFollow.setUsername("toFollow");
 
         follower.getFollowedUsers().add(toFollow);
+
+        // Mock repository to return true for isFollowing check
+        when(userRepository.isFollowing(1L, 2L)).thenReturn(true);
 
         boolean result = userService.followUser(follower, toFollow);
 
@@ -294,13 +300,16 @@ class UserServiceTest {
 
         follower.getFollowedUsers().add(toUnfollow);
 
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        // Mock repository to return true for isFollowing check
+        when(userRepository.isFollowing(1L, 2L)).thenReturn(true);
+        // Mock repository to return the follower with eagerly loaded followedUsers
+        when(userRepository.findByIdWithFollowedUsers(1L)).thenReturn(Optional.of(follower));
 
         boolean result = userService.unfollowUser(follower, toUnfollow);
 
         assertThat(result).isTrue();
         assertThat(follower.getFollowedUsers()).doesNotContain(toUnfollow);
-        verify(userRepository, times(1)).save(follower);
+        // No save() call expected - @Transactional auto-flushes managed entities
     }
 
     @Test

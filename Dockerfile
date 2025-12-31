@@ -11,7 +11,10 @@ COPY pom.xml .
 # Download dependencies (this layer will be cached if pom.xml doesn't change)
 RUN ./mvnw dependency:go-offline -B
 
-# Copy source code
+# Cache bust arg - set to source hash or timestamp to force rebuild
+ARG CACHEBUST=1
+
+# Copy source code (cache invalidates when src changes OR CACHEBUST changes)
 COPY src ./src
 
 # Build the application

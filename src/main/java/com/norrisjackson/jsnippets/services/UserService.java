@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -107,16 +108,20 @@ public class UserService implements UserDetailsService {
      * @param toFollow the user to be followed
      * @return true if follow was successful, false if already following or attempting to follow self
      */
+    @Transactional
     public boolean followUser(User follower, User toFollow) {
-        if (follower.equals(toFollow)) {
+        if (follower.getId().equals(toFollow.getId())) {
             return false; // Cannot follow oneself
         }
-        if (follower.getFollowedUsers().contains(toFollow)) {
+        if (userRepository.isFollowing(follower.getId(), toFollow.getId())) {
             return false; // Already following
         }
 
-        follower.getFollowedUsers().add(toFollow);
-        userRepository.save(follower);
+        // Re-fetch the follower with followedUsers eagerly loaded to avoid LazyInitializationException
+        User managedFollower = userRepository.findByIdWithFollowedUsers(follower.getId())
+                .orElseThrow(() -> new IllegalStateException("Follower user not found"));
+
+        managedFollower.getFollowedUsers().add(toFollow);
 
         return true;
     }
@@ -128,15 +133,59 @@ public class UserService implements UserDetailsService {
      * @param toUnfollow the user to be unfollowed
      * @return true if unfollow was successful, false if not currently following
      */
+    @Transactional
     public boolean unfollowUser(User follower, User toUnfollow) {
-        if (!follower.getFollowedUsers().contains(toUnfollow)) {
+        if (!userRepository.isFollowing(follower.getId(), toUnfollow.getId())) {
             return false; // Not following
         }
 
-        follower.getFollowedUsers().remove(toUnfollow);
-        userRepository.save(follower);
+        // Re-fetch the follower with followedUsers eagerly loaded to avoid LazyInitializationException
+        User managedFollower = userRepository.findByIdWithFollowedUsers(follower.getId())
+                .orElseThrow(() -> new IllegalStateException("Follower user not found"));
+
+        managedFollower.getFollowedUsers().remove(toUnfollow);
 
         return true;
+    }
+
+    /**
+     * Check if one user is following another.
+     *
+     * @param follower the potential follower
+     * @param followed the potentially followed user
+     * @return true if follower is following followed, false otherwise
+     */
+    public boolean isFollowing(User follower, User followed) {
+        if (follower == null || followed == null) {
+            return false;
+        }
+        return userRepository.isFollowing(follower.getId(), followed.getId());
+    }
+
+    /**
+     * Get the count of followers for a user.
+     *
+     * @param user the user to count followers for
+     * @return the number of followers
+     */
+    public long getFollowerCount(User user) {
+        if (user == null || user.getId() == null) {
+            return 0;
+        }
+        return userRepository.countFollowersByUserId(user.getId());
+    }
+
+    /**
+     * Get the count of users that a user is following.
+     *
+     * @param user the user to count following for
+     * @return the number of users being followed
+     */
+    public long getFollowingCount(User user) {
+        if (user == null || user.getId() == null) {
+            return 0;
+        }
+        return userRepository.countFollowedUsersByUserId(user.getId());
     }
 
     @Override

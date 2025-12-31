@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Profile Settings - JSnippets</title>
+    <title th:text="${isOwnProfile ? 'Profile Settings - JSnippets' : user.username + ' - JSnippets'}">Profile - JSnippets</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.8/css/bootstrap.min.css}" />
     <script th:src="@{/webjars/bootstrap/5.3.8/js/bootstrap.bundle.min.js}"></script>
@@ -11,8 +11,8 @@
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <h1 class="mb-4">Profile Settings</h1>
-            
+            <h1 class="mb-4" th:text="${isOwnProfile ? 'Profile Settings' : user.username + '''s Profile'}">Profile</h1>
+
             <!-- Success/Error messages -->
             <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}">
                 Success message
@@ -21,12 +21,41 @@
                 Error message
             </div>
 
+            <!-- Follow/Unfollow button for other users' profiles -->
+            <div th:if="${!isOwnProfile}" class="mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <form th:if="${!isFollowing}" th:action="@{'/profile/' + ${user.username} + '/follow'}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-plus me-1" viewBox="0 0 16 16">
+                                <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                                <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5z"/>
+                            </svg>
+                            Follow
+                        </button>
+                    </form>
+                    <form th:if="${isFollowing}" th:action="@{'/profile/' + ${user.username} + '/unfollow'}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-check me-1" viewBox="0 0 16 16">
+                                <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                                <path fill-rule="evenodd" d="M15.854 5.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L12.5 7.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
+                            </svg>
+                            Following
+                        </button>
+                    </form>
+                    <span class="text-muted">
+                        <strong th:text="${followerCount}">0</strong> followers ·
+                        <strong th:text="${followingCount}">0</strong> following
+                    </span>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title mb-0">Account Information</h3>
                 </div>
                 <div class="card-body">
-                    <form th:action="@{/profile}" method="post">
+                    <!-- Editable form for own profile -->
+                    <form th:if="${isOwnProfile}" th:action="@{/profile}" method="post">
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
                             <input type="text" class="form-control" id="username" 
@@ -63,6 +92,14 @@
                             <a th:href="@{/}" class="btn btn-secondary ms-2">Cancel</a>
                         </div>
                     </form>
+
+                    <!-- Read-only display for other users' profiles -->
+                    <div th:unless="${isOwnProfile}">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Username</label>
+                            <p class="form-control-plaintext" th:text="${user.username}">username</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -76,7 +113,7 @@
                             <strong>Member since:</strong><br>
                             <span th:text="${timezoneService.formatDateInUserTimezone(user.createdAt, user.timezone, 'MMMM dd, yyyy')}">Date joined</span>
                         </div>
-                        <div class="col-sm-6">
+                        <div th:if="${isOwnProfile}" class="col-sm-6">
                             <strong>Last login:</strong><br>
                             <span th:if="${user.lastLoggedInAt}" 
                                   th:text="${timezoneService.formatDateInUserTimezone(user.lastLoggedInAt, user.timezone)}">

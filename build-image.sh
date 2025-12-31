@@ -5,7 +5,7 @@
 # Usage:
 #   ./build-image.sh              # Build with auto-detected values
 #   ./build-image.sh --push       # Build and push to registry
-#   ./build-image.sh --no-cache   # Build without Docker cache
+#   ./build-image.sh --no-cache   # Build without any Docker cache
 #
 set -e
 
@@ -71,10 +71,22 @@ else
     VCS_REF="unknown"
 fi
 
+# Compute hash of source files to bust cache when source changes
+# This ensures the build step runs even if Docker's COPY cache doesn't detect changes
+if command -v find &> /dev/null && command -v shasum &> /dev/null; then
+    SRC_HASH=$(find src -type f \( -name "*.java" -o -name "*.properties" -o -name "*.html" -o -name "*.xml" -o -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | sort | xargs cat 2>/dev/null | shasum -a 256 | cut -c1-12)
+elif command -v find &> /dev/null && command -v md5sum &> /dev/null; then
+    SRC_HASH=$(find src -type f \( -name "*.java" -o -name "*.properties" -o -name "*.html" -o -name "*.xml" -o -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | sort | xargs cat 2>/dev/null | md5sum | cut -c1-12)
+else
+    # Fallback to timestamp if hash tools unavailable
+    SRC_HASH=$(date +%s)
+fi
+
 echo -e "${YELLOW}Building ${IMAGE_NAME}:${APP_VERSION}${NC}"
 echo -e "  Build Date: ${BUILD_DATE}"
 echo -e "  Version:    ${APP_VERSION}"
 echo -e "  Git Ref:    ${VCS_REF}"
+echo -e "  Src Hash:   ${SRC_HASH}"
 echo ""
 
 # Build the image
@@ -83,6 +95,7 @@ ${CONTAINER_CMD} build \
     --build-arg BUILD_DATE="${BUILD_DATE}" \
     --build-arg APP_VERSION="${APP_VERSION}" \
     --build-arg VCS_REF="${VCS_REF}" \
+    --build-arg CACHEBUST="${SRC_HASH}" \
     -t "${IMAGE_NAME}:${APP_VERSION}" \
     -t "${IMAGE_NAME}:latest" \
     .

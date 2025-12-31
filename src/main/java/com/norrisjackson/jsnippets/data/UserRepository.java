@@ -142,4 +142,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT f FROM User u JOIN u.followedUsers f WHERE u.id = :userId")
     List<User> findFollowedUsersByUserId(@Param("userId") Long userId);
+
+    /**
+     * Check if one user is following another user.
+     * Uses parameterized query to prevent SQL injection.
+     * Efficient single query without loading entire collections.
+     *
+     * @param followerId the ID of the potential follower (must not be null)
+     * @param followedId the ID of the potentially followed user (must not be null)
+     * @return true if followerId is following followedId, false otherwise
+     */
+    @Query("SELECT COUNT(f) > 0 FROM User u JOIN u.followedUsers f WHERE u.id = :followerId AND f.id = :followedId")
+    boolean isFollowing(@Param("followerId") Long followerId, @Param("followedId") Long followedId);
 }
