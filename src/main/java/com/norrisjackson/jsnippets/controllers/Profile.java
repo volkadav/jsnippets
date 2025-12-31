@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+
 import java.time.ZoneId;
 import java.util.Optional;
 import java.util.Set;
@@ -186,6 +187,7 @@ public class Profile {
      *
      * @param email the updated email address
      * @param timezone the updated timezone
+     * @param bio the updated bio (optional)
      * @param model the Spring MVC model
      * @param redirectAttributes for flash messages
      * @return redirect URL
@@ -194,6 +196,7 @@ public class Profile {
     @PostMapping("/profile")
     String handleProfileUpdate(@RequestParam String email,
                                @RequestParam String timezone,
+                               @RequestParam(required = false) String bio,
                                Model model,
                                RedirectAttributes redirectAttributes) {
         User currentUser = (User) model.getAttribute("currentUser");
@@ -224,11 +227,29 @@ public class Profile {
             return "redirect:/profile";
         }
 
+        // Validate bio length
+        if (bio != null && bio.length() > 4000) {
+            redirectAttributes.addFlashAttribute("error", "Bio must be 4000 characters or less.");
+            return "redirect:/profile";
+        }
+
         // Update user profile
         try {
             currentUser.setEmail(email);
             currentUser.setTimezone(timezone);
             
+            // Sanitize bio - strip HTML tags and escape special characters
+            if (bio != null) {
+                // Remove HTML tags
+                String sanitizedBio = bio.replaceAll("<[^>]*>", "");
+                // Trim whitespace
+                sanitizedBio = sanitizedBio.trim();
+                // Set to null if empty after sanitization
+                currentUser.setBio(sanitizedBio.isEmpty() ? null : sanitizedBio);
+            } else {
+                currentUser.setBio(null);
+            }
+
             userService.updateUser(currentUser);
             
             log.info("Profile updated for user: {}", currentUser.getUsername());

@@ -78,16 +78,24 @@
     <ul class="list-group">
         <li class="list-group-item" th:each="snippet : ${snippets}">
             <div class="d-flex justify-content-between align-items-start">
-                <div class="flex-grow-1">
-                    <div class="d-flex align-items-center mb-1">
-                        <a th:href="@{'/profile/' + ${snippet.poster.username}}"
-                           class="fw-bold text-decoration-none me-2"
-                           th:classappend="${snippet.poster.id == currentUser.id} ? 'text-primary' : ''"
-                           th:text="${snippet.poster.username}">username</a>
-                        <small class="text-muted" th:text="${timezoneService.formatDateInUserTimezone(snippet.editedAt, currentUser.timezone)}">date</small>
-                        <span th:if="${snippet.poster.id == currentUser.id}" class="badge bg-secondary ms-2">You</span>
+                <div class="d-flex flex-grow-1">
+                    <a th:href="@{'/profile/' + ${snippet.poster.username}}" class="me-3">
+                        <img th:src="@{'/user/' + ${snippet.poster.username} + '/icon/thumbnail'}"
+                             alt="User icon"
+                             class="rounded-circle"
+                             style="width: 32px; height: 32px; object-fit: cover;">
+                    </a>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-1">
+                            <a th:href="@{'/profile/' + ${snippet.poster.username}}"
+                               class="fw-bold text-decoration-none me-2"
+                               th:classappend="${snippet.poster.id == currentUser.id} ? 'text-primary' : ''"
+                               th:text="${snippet.poster.username}">username</a>
+                            <small class="text-muted" th:text="${timezoneService.formatDateInUserTimezone(snippet.editedAt, currentUser.timezone)}">date</small>
+                            <span th:if="${snippet.poster.id == currentUser.id}" class="badge bg-secondary ms-2">You</span>
+                        </div>
+                        <p class="mb-1" th:text="${snippet.contents}">Snippet content</p>
                     </div>
-                    <p class="mb-1" th:text="${snippet.contents}">Snippet content</p>
                 </div>
                 <div th:if="${snippet.poster.id == currentUser.id}" class="ms-3">
                     <a th:href="@{'/snippet/' + ${snippet.id} + '/edit'}" class="btn btn-sm btn-outline-primary me-1">Edit</a>

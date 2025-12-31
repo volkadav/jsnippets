@@ -8,19 +8,27 @@
 </head>
 <body>
 <div class="container mt-5" th:with="baseUrl=${authUser.id == viewUser.id ? '/snippets' : '/snippets/' + viewUser.username}">
-    <h1 class="mb-4">Snippets Timeline for <span th:text="${viewUser.username}"></span> <span class="text-muted fs-6">(<span th:text="${snippetCount}">0</span>)</span>
-        <span class="ms-2">
-            <a th:if="${sortDir} == 'asc'"
-               th:href="@{${baseUrl} + '?page=' + ${currentPage} + '&size=' + ${pageSize} + '&sort=desc'}"
-               class="text-decoration-none" title="Sort by create/edit time descending">&#x25BC;</a>
-            <a th:if="${sortDir} == 'desc'"
-               th:href="@{${baseUrl} + '?page=' + ${currentPage} + '&size=' + ${pageSize} + '&sort=asc'}"
-               class="text-decoration-none" title="Sort by create/edit time ascending">&#x25B2;</a>
-            <a th:if="${sortDir} == null or (${sortDir} != 'asc' and ${sortDir} != 'desc')"
-               th:href="@{${baseUrl} + '?page=' + ${currentPage} + '&size=' + ${pageSize} + '&sort=desc'}"
-               class="text-decoration-none" title="Sort by create/edit time descending">&#x25BC;</a>
-        </span>
-    </h1>
+    <div class="d-flex align-items-center mb-4">
+        <img th:src="@{'/user/' + ${viewUser.username} + '/icon'}"
+             alt="User icon"
+             class="rounded-circle me-3"
+             style="width: 64px; height: 64px; object-fit: cover;">
+        <div>
+            <h1 class="mb-0">Snippets for <span th:text="${viewUser.username}"></span> <span class="text-muted fs-6">(<span th:text="${snippetCount}">0</span>)</span>
+                <span class="ms-2">
+                    <a th:if="${sortDir} == 'asc'"
+                       th:href="@{${baseUrl} + '?page=' + ${currentPage} + '&size=' + ${pageSize} + '&sort=desc'}"
+                       class="text-decoration-none" title="Sort by create/edit time descending">&#x25BC;</a>
+                    <a th:if="${sortDir} == 'desc'"
+                       th:href="@{${baseUrl} + '?page=' + ${currentPage} + '&size=' + ${pageSize} + '&sort=asc'}"
+                       class="text-decoration-none" title="Sort by create/edit time ascending">&#x25B2;</a>
+                    <a th:if="${sortDir} == null or (${sortDir} != 'asc' and ${sortDir} != 'desc')"
+                       th:href="@{${baseUrl} + '?page=' + ${currentPage} + '&size=' + ${pageSize} + '&sort=desc'}"
+                       class="text-decoration-none" title="Sort by create/edit time descending">&#x25BC;</a>
+                </span>
+            </h1>
+        </div>
+    </div>
     <p class="mb-4 text-secondary" th:if="${authUser.id == viewUser.id}">Here are all your snippets. You can create, edit, or delete them as you wish.</p>
     <a th:href="@{/snippets/new}" class="btn btn-success mb-3" th:if="${authUser.id == viewUser.id}">New Snippet</a>
     <a th:href="@{'/profile/{user}'(user=${viewUser.username})}" class="btn btn-success mb-3" th:if="${authUser.id != viewUser.id}">View Profile</a>

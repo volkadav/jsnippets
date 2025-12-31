@@ -11,7 +11,18 @@
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <h1 class="mb-4" th:text="${isOwnProfile ? 'Profile Settings' : user.username + '''s Profile'}">Profile</h1>
+            <!-- Profile Header with Icon -->
+            <div class="d-flex align-items-center mb-4">
+                <img th:src="@{'/user/' + ${user.username} + '/icon'}"
+                     alt="Profile icon"
+                     class="rounded-circle me-3"
+                     style="width: 80px; height: 80px; object-fit: cover;">
+                <div>
+                    <h1 class="mb-0" th:text="${isOwnProfile ? 'Profile Settings' : user.username + '''s Profile'}">Profile</h1>
+                    <!-- Bio display for other users' profiles -->
+                    <p th:if="${!isOwnProfile && user.bio != null}" class="text-muted mb-0 mt-1" th:text="${user.bio}">User bio</p>
+                </div>
+            </div>
 
             <!-- Success/Error messages -->
             <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}">
@@ -46,6 +57,39 @@
                         <strong th:text="${followerCount}">0</strong> followers ·
                         <strong th:text="${followingCount}">0</strong> following
                     </span>
+                </div>
+            </div>
+
+            <!-- Profile Icon Section (own profile only) -->
+            <div th:if="${isOwnProfile}" class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">Profile Icon</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <img th:src="@{'/user/' + ${user.username} + '/icon'}"
+                             alt="Current profile icon"
+                             class="rounded-circle me-3"
+                             style="width: 64px; height: 64px; object-fit: cover;">
+                        <div>
+                            <p class="mb-1" th:if="${user.icon != null}">You have a custom icon set.</p>
+                            <p class="mb-1" th:unless="${user.icon != null}">Using auto-generated icon based on your email.</p>
+                        </div>
+                    </div>
+                    <form th:action="@{/profile/icon}" method="post" enctype="multipart/form-data" class="mb-2">
+                        <div class="mb-3">
+                            <label for="icon" class="form-label">Upload new icon</label>
+                            <input type="file" class="form-control" id="icon" name="icon"
+                                   accept="image/png,image/jpeg,image/gif,image/webp">
+                            <div class="form-text">
+                                PNG, JPEG, GIF, or WebP. Maximum 32KB. Will be displayed at various sizes.
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">Upload Icon</button>
+                    </form>
+                    <form th:if="${user.icon != null}" th:action="@{/profile/icon/remove}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Remove Custom Icon</button>
+                    </form>
                 </div>
             </div>
 
@@ -88,6 +132,18 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="bio" class="form-label">Bio</label>
+                            <textarea class="form-control" id="bio" name="bio" rows="4"
+                                      maxlength="4000"
+                                      placeholder="Tell others a bit about yourself..."
+                                      th:text="${user.bio}"></textarea>
+                            <div class="form-text">
+                                Optional. A short description that appears on your profile page.
+                                Maximum 4000 characters. HTML tags will be removed.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
                             <button type="submit" class="btn btn-primary">Update Profile</button>
                             <a th:href="@{/}" class="btn btn-secondary ms-2">Cancel</a>
                         </div>
@@ -98,6 +154,10 @@
                         <div class="mb-3">
                             <label class="form-label text-muted">Username</label>
                             <p class="form-control-plaintext" th:text="${user.username}">username</p>
+                        </div>
+                        <div th:if="${user.bio}" class="mb-3">
+                            <label class="form-label text-muted">About</label>
+                            <p class="form-control-plaintext" th:text="${user.bio}">bio</p>
                         </div>
                     </div>
                 </div>

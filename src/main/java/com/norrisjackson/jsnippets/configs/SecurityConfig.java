@@ -80,6 +80,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                     .requestMatchers("/", "/login", "/register",
                             "/webjars/**", "/css/**", "/js/**", "/images/**",
+                            "/user/*/icon", "/user/*/icon/thumbnail",
                             "/favicon.ico", "/actuator", "/actuator/health/**", "/actuator/info").permitAll()
                     .anyRequest().authenticated())
             .formLogin(form -> form.loginPage("/login").failureHandler(failureHandler).permitAll())

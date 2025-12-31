@@ -100,5 +100,72 @@ class ProfileControllerTest {
                 .andExpect(redirectedUrl("/profile/charlie"))
                 .andExpect(flash().attributeExists("error"));
     }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void updateProfile_withBio_success() throws Exception {
+        mockMvc.perform(post("/profile")
+                        .param("email", "alice@example.com")
+                        .param("timezone", "UTC")
+                        .param("bio", "Hello, I am Alice!")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attributeExists("success"));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void updateProfile_withEmptyBio_success() throws Exception {
+        mockMvc.perform(post("/profile")
+                        .param("email", "alice@example.com")
+                        .param("timezone", "UTC")
+                        .param("bio", "")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attributeExists("success"));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void updateProfile_withHtmlInBio_sanitizesHtml() throws Exception {
+        mockMvc.perform(post("/profile")
+                        .param("email", "alice@example.com")
+                        .param("timezone", "UTC")
+                        .param("bio", "<script>alert('xss')</script>Hello World")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attributeExists("success"));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void updateProfile_withBioTooLong_returnsError() throws Exception {
+        String longBio = "a".repeat(4001); // 4001 characters, exceeds 4000 limit
+        mockMvc.perform(post("/profile")
+                        .param("email", "alice@example.com")
+                        .param("timezone", "UTC")
+                        .param("bio", longBio)
+                        .with(SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attributeExists("error"));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    void updateProfile_withMaxLengthBio_success() throws Exception {
+        String maxBio = "a".repeat(4000); // Exactly 4000 characters
+        mockMvc.perform(post("/profile")
+                        .param("email", "alice@example.com")
+                        .param("timezone", "UTC")
+                        .param("bio", maxBio)
+                        .with(SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attributeExists("success"));
+    }
 }
 
