@@ -9,6 +9,9 @@
     <body>
     <div class="container mt-5" style="max-width: 400px;">
         <h1 class="mb-4 text-center">Please log in</h1>
+        <div th:if="${success}" class="alert alert-success" role="alert">
+            <span th:text="${success}">Operation successful.</span>
+        </div>
         <div th:if="${error}" class="alert alert-danger" role="alert">
             <span th:text="${error}">Invalid username or password.</span>
         </div>

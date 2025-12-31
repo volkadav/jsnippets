@@ -67,7 +67,8 @@ class ProfileControllerTest {
     void viewNonexistentUserProfile_redirectsWithError() throws Exception {
         mockMvc.perform(get("/profile/nonexistentuser"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/profile?error=usernotfound"));
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attributeExists("error"));
     }
 
     @Test
@@ -76,7 +77,8 @@ class ProfileControllerTest {
         mockMvc.perform(post("/profile/bob/follow")
                         .with(SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("/profile/bob?success=followed"));
+                .andExpect(redirectedUrl("/profile/bob"))
+                .andExpect(flash().attributeExists("success"));
     }
 
     @Test
@@ -85,7 +87,8 @@ class ProfileControllerTest {
         mockMvc.perform(post("/profile/nonexistentuser/follow")
                         .with(SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/profile?error=usernotfound"));
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attributeExists("error"));
     }
 
     @Test
@@ -94,7 +97,8 @@ class ProfileControllerTest {
         mockMvc.perform(post("/profile/charlie/unfollow")
                         .with(SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("/profile/charlie?error=notfollowing"));
+                .andExpect(redirectedUrl("/profile/charlie"))
+                .andExpect(flash().attributeExists("error"));
     }
 }
 
