@@ -3,9 +3,11 @@
 # Build jsnippets container image with dynamic OCI metadata labels.
 #
 # Usage:
-#   ./build-image.sh              # Build with auto-detected values
+#   ./build-image.sh              # Build with auto-detected values (prunes dangling images)
 #   ./build-image.sh --push       # Build and push to registry
 #   ./build-image.sh --no-cache   # Build without any Docker cache
+#   ./build-image.sh --no-prune   # Skip pruning dangling images after build
+#   ./build-image.sh --clean      # Full cleanup: prune + remove build cache
 #
 set -e
 
@@ -21,6 +23,8 @@ IMAGE_NAME="jsnippets"
 # Parse command line arguments
 PUSH=false
 NO_CACHE=""
+PRUNE=true  # Prune by default
+CLEAN=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         --push)
@@ -29,6 +33,19 @@ while [[ $# -gt 0 ]]; do
             ;;
         --no-cache)
             NO_CACHE="--no-cache"
+            shift
+            ;;
+        --no-prune)
+            PRUNE=false
+            shift
+            ;;
+        --prune)
+            # Keep for backwards compatibility, but it's now the default
+            PRUNE=true
+            shift
+            ;;
+        --clean)
+            CLEAN=true
             shift
             ;;
         *)
@@ -117,5 +134,20 @@ if [[ "${PUSH}" == "true" ]]; then
     ${CONTAINER_CMD} push "${IMAGE_NAME}:${APP_VERSION}"
     ${CONTAINER_CMD} push "${IMAGE_NAME}:latest"
     echo -e "${GREEN}Push complete${NC}"
+fi
+
+# Cleanup if requested
+if [[ "${PRUNE}" == "true" ]]; then
+    echo ""
+    echo -e "${YELLOW}Pruning dangling images...${NC}"
+    ${CONTAINER_CMD} image prune -f
+    echo -e "${GREEN}Dangling images removed${NC}"
+fi
+
+if [[ "${CLEAN}" == "true" ]]; then
+    echo ""
+    echo -e "${YELLOW}Cleaning build cache...${NC}"
+    ${CONTAINER_CMD} builder prune -f 2>/dev/null || ${CONTAINER_CMD} system prune -f --filter "until=24h"
+    echo -e "${GREEN}Build cache cleaned${NC}"
 fi
 
