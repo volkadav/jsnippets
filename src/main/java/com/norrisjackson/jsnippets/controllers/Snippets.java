@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
 @Controller
 @Slf4j
 public class Snippets {
@@ -93,6 +95,94 @@ public class Snippets {
         model.addAttribute("pageSize", pageSize);
 
         return "snippet/list";
+    }
+
+    /**
+     * Display a consolidated timeline of snippets from the current user and users they follow.
+     *
+     * @param filterUser optional username to filter by
+     * @param page       optional page number
+     * @param size       optional page size
+     * @param sortDir    optional sort direction ("asc" or "desc")
+     * @param model      the Spring MVC model
+     * @return the timeline view name
+     */
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/timeline")
+    String timeline(@RequestParam(name = "user", required = false) String filterUser,
+                    @RequestParam(name = "page", required = false) Integer page,
+                    @RequestParam(name = "size", required = false) Integer size,
+                    @RequestParam(name = "sort", required = false) String sortDir,
+                    Model model) {
+        User currentUser = (User) model.getAttribute("currentUser");
+
+        // Get list of followed users for filtering dropdown and query
+        List<User> followedUsers = userService.getFollowedUsers(currentUser.getId());
+        List<Long> followedUserIds = followedUsers.stream().map(User::getId).toList();
+
+        model.addAttribute("followedUsers", followedUsers);
+        model.addAttribute("followingCount", followedUsers.size());
+
+        // Sort setup
+        Sort sort = Sort.by("editedAt");
+        if (sortDir == null || sortDir.isBlank()) {
+            sortDir = "desc";
+        } else {
+            sortDir = sortDir.toLowerCase();
+        }
+        model.addAttribute("sortDir", sortDir);
+        if (sortDir.equals("asc")) {
+            sort = sort.ascending();
+        } else {
+            sort = sort.descending();
+        }
+
+        // Pagination setup
+        int pageNumber = (page == null || page < 0) ? 0 : page;
+        int pageSize = paginationConfig.getEffectivePageSize(size);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+
+        // Get timeline snippets (optionally filtered by user)
+        Page<Snippet> snippetPage;
+        User filterUserEntity = null;
+
+        if (filterUser != null && !filterUser.isBlank()) {
+            // Filter by specific user
+            filterUserEntity = userService.getUserByUsername(filterUser).orElse(null);
+            if (filterUserEntity != null) {
+                // Validate filter user is self or someone we follow
+                if (filterUserEntity.getId().equals(currentUser.getId()) || followedUserIds.contains(filterUserEntity.getId())) {
+                    snippetPage = snippetService.getTimelineSnippetsFilteredByUser(
+                            currentUser.getId(), followedUserIds, filterUserEntity.getId(), pageable);
+                } else {
+                    // Invalid filter user, show all timeline
+                    log.warn("User {} attempted to filter by user {} they don't follow", currentUser.getUsername(), filterUser);
+                    snippetPage = snippetService.getTimelineSnippets(currentUser.getId(), followedUserIds, pageable);
+                    filterUserEntity = null;
+                }
+            } else {
+                // User not found, show all timeline
+                log.warn("Filter user not found: {}", filterUser);
+                snippetPage = snippetService.getTimelineSnippets(currentUser.getId(), followedUserIds, pageable);
+            }
+        } else {
+            // No filter, show all timeline
+            snippetPage = snippetService.getTimelineSnippets(currentUser.getId(), followedUserIds, pageable);
+        }
+
+        long snippetCount = snippetPage.getTotalElements();
+        log.info("Found {} timeline snippets for user {} (page {} of {})",
+                snippetCount, currentUser.getUsername(), pageNumber + 1, snippetPage.getTotalPages());
+
+        model.addAttribute("snippets", snippetPage.getContent());
+        model.addAttribute("snippetCount", snippetCount);
+        model.addAttribute("page", snippetPage);
+        model.addAttribute("currentPage", pageNumber);
+        model.addAttribute("totalPages", snippetPage.getTotalPages());
+        model.addAttribute("pageSize", pageSize);
+        model.addAttribute("filterUser", filterUserEntity);
+
+        return "snippet/timeline";
     }
 
     /**

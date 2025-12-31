@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -186,6 +187,34 @@ public class UserService implements UserDetailsService {
             return 0;
         }
         return userRepository.countFollowedUsersByUserId(user.getId());
+    }
+
+    /**
+     * Get the list of user IDs that a user is following.
+     *
+     * @param userId the ID of the user
+     * @return list of IDs of users being followed
+     */
+    public List<Long> getFollowedUserIds(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return userRepository.findFollowedUsersByUserId(userId).stream()
+                .map(User::getId)
+                .toList();
+    }
+
+    /**
+     * Get the list of users that a user is following.
+     *
+     * @param userId the ID of the user
+     * @return list of users being followed
+     */
+    public List<User> getFollowedUsers(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return userRepository.findFollowedUsersByUserId(userId);
     }
 
     @Override

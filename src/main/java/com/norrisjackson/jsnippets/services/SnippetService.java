@@ -222,4 +222,66 @@ public class SnippetService {
         }
         return Optional.empty();
     }
+
+    /**
+     * Get timeline snippets for a user - includes their own snippets and snippets from users they follow.
+     *
+     * @param userId the current user's ID
+     * @param followedUserIds list of IDs of users the current user follows
+     * @param pageable pagination parameters
+     * @return page of timeline snippets
+     */
+    public Page<Snippet> getTimelineSnippets(Long userId, List<Long> followedUserIds, Pageable pageable) {
+        if (userId == null || userId <= 0) {
+            log.warn("Invalid userId provided for timeline: {}", userId);
+            return Page.empty();
+        }
+
+        if (followedUserIds == null || followedUserIds.isEmpty()) {
+            // User doesn't follow anyone, just return their own snippets
+            return snippetRepository.findTimelineSnippetsForUserOnly(userId, pageable);
+        }
+
+        return snippetRepository.findTimelineSnippets(userId, followedUserIds, pageable);
+    }
+
+    /**
+     * Get timeline snippets filtered by a specific user.
+     *
+     * @param userId the current user's ID
+     * @param followedUserIds list of IDs of users the current user follows
+     * @param filterUserId the user ID to filter by
+     * @param pageable pagination parameters
+     * @return page of timeline snippets filtered by the specified user
+     */
+    public Page<Snippet> getTimelineSnippetsFilteredByUser(Long userId, List<Long> followedUserIds,
+                                                            Long filterUserId, Pageable pageable) {
+        if (userId == null || userId <= 0) {
+            log.warn("Invalid userId provided for timeline filter: {}", userId);
+            return Page.empty();
+        }
+
+        if (filterUserId == null || filterUserId <= 0) {
+            log.warn("Invalid filterUserId provided: {}", filterUserId);
+            return Page.empty();
+        }
+
+        // If filtering by self and not following anyone, just return own snippets
+        if (filterUserId.equals(userId) && (followedUserIds == null || followedUserIds.isEmpty())) {
+            return snippetRepository.findTimelineSnippetsForUserOnly(userId, pageable);
+        }
+
+        // Validate that the filter user is either self or someone we follow
+        if (!filterUserId.equals(userId) && (followedUserIds == null || !followedUserIds.contains(filterUserId))) {
+            log.warn("User {} attempted to filter timeline by user {} they don't follow", userId, filterUserId);
+            return Page.empty();
+        }
+
+        // If not following anyone, use the user-only query for filtering by self
+        if (followedUserIds == null || followedUserIds.isEmpty()) {
+            return snippetRepository.findTimelineSnippetsForUserOnly(filterUserId, pageable);
+        }
+
+        return snippetRepository.findTimelineSnippetsFilteredByUser(userId, followedUserIds, filterUserId, pageable);
+    }
 }

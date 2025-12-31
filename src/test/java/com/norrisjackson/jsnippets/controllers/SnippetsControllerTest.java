@@ -56,4 +56,43 @@ public class SnippetsControllerTest {
                 .accept(MediaType.TEXT_HTML))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    public void getTimelineUnauthenticated() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.get("/timeline")
+                .accept(MediaType.TEXT_HTML))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    public void getTimelineAuthenticated() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.get("/timeline")
+                .accept(MediaType.TEXT_HTML))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Timeline")));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    public void getTimelineWithPaginationParameters() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.get("/timeline")
+                .param("page", "0")
+                .param("size", "20")
+                .param("sort", "desc")
+                .accept(MediaType.TEXT_HTML))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Timeline")));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    public void getTimelineWithUserFilter() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.get("/timeline")
+                .param("user", "alice")
+                .accept(MediaType.TEXT_HTML))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Timeline")));
+    }
 }
