@@ -24,7 +24,10 @@
 	</properties>
 
   <scm>
+      <connection>scm:git:https://github.com/volkadav/jsnippets.git</connection>
       <developerConnection>scm:git:https://github.com/volkadav/jsnippets.git</developerConnection>
+      <url>https://github.com/volkadav/jsnippets</url>
+      <tag>HEAD</tag>
   </scm>
 
 	<dependencies>

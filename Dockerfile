@@ -1,4 +1,6 @@
 # Build stage - use full JDK for building
+# This uses 21-alpine because an arm64 17-alpine does not seem to exist,
+# so this works on my local macbook dev env as well as remote CI.
 FROM eclipse-temurin:21-alpine AS builder
 
 WORKDIR /app
@@ -20,7 +22,7 @@ COPY src ./src
 # Build the application
 RUN ./mvnw clean package -DskipTests
 
-# Runtime stage, use JRE-only base
+# Runtime stage, use JRE-only base (see note for build re: why 21)
 FROM eclipse-temurin:21-jre-alpine
 
 # Build arguments for dynamic metadata
@@ -30,13 +32,13 @@ ARG VCS_REF=unknown
 
 # OCI Image metadata labels
 LABEL org.opencontainers.image.title="jsnippets" \
-      org.opencontainers.image.description="Snippets Server - A progress snippet sharing platform" \
-      org.opencontainers.image.version="${APP_VERSION}" \
-      org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.revision="${VCS_REF}" \
-      org.opencontainers.image.source="https://github.com/volkadav/jsnippets" \
-      org.opencontainers.image.licenses="Apache-2.0" \
-      org.opencontainers.image.vendor="norrisjackson.com"
+  org.opencontainers.image.description="Snippets Server - A progress snippet sharing platform" \
+  org.opencontainers.image.version="${APP_VERSION}" \
+  org.opencontainers.image.created="${BUILD_DATE}" \
+  org.opencontainers.image.revision="${VCS_REF}" \
+  org.opencontainers.image.source="https://github.com/volkadav/jsnippets" \
+  org.opencontainers.image.licenses="Apache-2.0" \
+  org.opencontainers.image.vendor="norrisjackson.com"
 
 # Create non-root user for security
 RUN addgroup -S spring && adduser -S spring -G spring
