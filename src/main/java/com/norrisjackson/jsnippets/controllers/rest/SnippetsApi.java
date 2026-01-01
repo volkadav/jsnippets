@@ -5,6 +5,8 @@ import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.controllers.rest.dto.ApiError;
 import com.norrisjackson.jsnippets.controllers.rest.dto.ErrorCodes;
+import com.norrisjackson.jsnippets.controllers.rest.dto.PageResponse;
+import com.norrisjackson.jsnippets.controllers.rest.dto.SnippetResponse;
 import com.norrisjackson.jsnippets.services.SnippetService;
 import com.norrisjackson.jsnippets.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +26,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -83,7 +86,12 @@ public class SnippetsApi {
                 Sort.by(Sort.Direction.DESC, "editedAt")
         );
 
-        return ResponseEntity.ok(snippetService.getSnippetsByPosterId(currentUser.getId(), page));
+        Page<Snippet> snippetPage = snippetService.getSnippetsByPosterId(currentUser.getId(), page);
+        List<SnippetResponse> content = snippetPage.getContent().stream()
+                .map(SnippetResponse::from)
+                .toList();
+
+        return ResponseEntity.ok(PageResponse.from(snippetPage, content));
     }
 
     @GetMapping("/{snippetId}")
@@ -97,7 +105,7 @@ public class SnippetsApi {
 
         Optional<Snippet> s = snippetService.retrieveSnippetForUser(snippetId, currentUser.getId());
 
-        return s.<ResponseEntity<?>>map(ResponseEntity::ok)
+        return s.<ResponseEntity<?>>map(snippet -> ResponseEntity.ok(SnippetResponse.from(snippet)))
                 .orElseGet(() -> ResponseEntity
                         .status(HttpStatus.NOT_FOUND)
                         .body(ApiError.of(ErrorCodes.SNIPPET_NOT_FOUND, "Snippet not found", request.getRequestURI())));
@@ -124,7 +132,7 @@ public class SnippetsApi {
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiError.of(ErrorCodes.INTERNAL_ERROR, "Failed to create snippet", request.getRequestURI()));
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(newSnippet);
+        return ResponseEntity.status(HttpStatus.CREATED).body(SnippetResponse.from(newSnippet));
     }
 
     @PatchMapping(path = "/{snippetId}", consumes = "application/json")
@@ -154,7 +162,7 @@ public class SnippetsApi {
         }
 
         Optional<Snippet> updated = snippetService.updateSnippet(snippetId, newContents, currentUser);
-        return updated.<ResponseEntity<?>>map(ResponseEntity::ok)
+        return updated.<ResponseEntity<?>>map(snippet -> ResponseEntity.ok(SnippetResponse.from(snippet)))
                 .orElseGet(() -> ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
                         .body(ApiError.of(ErrorCodes.INVALID_REQUEST, "Failed to update snippet", request.getRequestURI())));

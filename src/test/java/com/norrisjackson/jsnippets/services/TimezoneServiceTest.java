@@ -7,29 +7,28 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class TimezoneServiceTest {
 
     private TimezoneService timezoneService;
-    private Date testDate;
+    private Instant testInstant;
 
     @BeforeEach
     void setUp() {
         timezoneService = new TimezoneService();
         
-        // Create a fixed test date: 2024-12-01 15:30:00 UTC
+        // Create a fixed test instant: 2024-12-01 15:30:00 UTC
         LocalDateTime utcDateTime = LocalDateTime.of(2024, 12, 1, 15, 30, 0);
         ZonedDateTime utcZonedDateTime = utcDateTime.atZone(ZoneId.of("UTC"));
-        testDate = Date.from(utcZonedDateTime.toInstant());
+        testInstant = utcZonedDateTime.toInstant();
     }
 
     @Test
     void formatDateInUserTimezone_WithUTCTimezone_ReturnsCorrectFormat() {
         // When
-        String result = timezoneService.formatDateInUserTimezone(testDate, "UTC", "MMM dd, yyyy h:mm a");
+        String result = timezoneService.formatDateInUserTimezone(testInstant, "UTC", "MMM dd, yyyy h:mm a");
 
         // Then
         assertThat(result).isEqualTo("Dec 01, 2024 3:30 PM");
@@ -38,7 +37,7 @@ class TimezoneServiceTest {
     @Test
     void formatDateInUserTimezone_WithNewYorkTimezone_ReturnsCorrectFormat() {
         // When (UTC-5 in December, so 15:30 UTC = 10:30 EST)
-        String result = timezoneService.formatDateInUserTimezone(testDate, "America/New_York", "MMM dd, yyyy h:mm a");
+        String result = timezoneService.formatDateInUserTimezone(testInstant, "America/New_York", "MMM dd, yyyy h:mm a");
 
         // Then
         assertThat(result).isEqualTo("Dec 01, 2024 10:30 AM");
@@ -47,7 +46,7 @@ class TimezoneServiceTest {
     @Test
     void formatDateInUserTimezone_WithLondonTimezone_ReturnsCorrectFormat() {
         // When (UTC+0 in December, so same time)
-        String result = timezoneService.formatDateInUserTimezone(testDate, "Europe/London", "MMM dd, yyyy h:mm a");
+        String result = timezoneService.formatDateInUserTimezone(testInstant, "Europe/London", "MMM dd, yyyy h:mm a");
 
         // Then
         assertThat(result).isEqualTo("Dec 01, 2024 3:30 PM");
@@ -56,7 +55,7 @@ class TimezoneServiceTest {
     @Test
     void formatDateInUserTimezone_WithTokyoTimezone_ReturnsCorrectFormat() {
         // When (UTC+9, so 15:30 UTC = 00:30 next day)
-        String result = timezoneService.formatDateInUserTimezone(testDate, "Asia/Tokyo", "MMM dd, yyyy h:mm a");
+        String result = timezoneService.formatDateInUserTimezone(testInstant, "Asia/Tokyo", "MMM dd, yyyy h:mm a");
 
         // Then
         assertThat(result).isEqualTo("Dec 02, 2024 12:30 AM");
@@ -65,7 +64,7 @@ class TimezoneServiceTest {
     @Test
     void formatDateInUserTimezone_WithDefaultPattern_ReturnsDefaultFormat() {
         // When
-        String result = timezoneService.formatDateInUserTimezone(testDate, "UTC");
+        String result = timezoneService.formatDateInUserTimezone(testInstant, "UTC");
 
         // Then
         assertThat(result).isEqualTo("Dec 01, 2024 3:30 PM");
@@ -74,7 +73,7 @@ class TimezoneServiceTest {
     @Test
     void formatDateInUserTimezone_WithNullDate_ReturnsEmptyString() {
         // When
-        String result = timezoneService.formatDateInUserTimezone(null, "UTC", "MMM dd, yyyy");
+        String result = timezoneService.formatDateInUserTimezone((Instant) null, "UTC", "MMM dd, yyyy");
 
         // Then
         assertThat(result).isEmpty();
@@ -83,7 +82,7 @@ class TimezoneServiceTest {
     @Test
     void formatDateInUserTimezone_WithInvalidTimezone_FallsBackToUTC() {
         // When
-        String result = timezoneService.formatDateInUserTimezone(testDate, "Invalid/Timezone", "MMM dd, yyyy h:mm a");
+        String result = timezoneService.formatDateInUserTimezone(testInstant, "Invalid/Timezone", "MMM dd, yyyy h:mm a");
 
         // Then
         assertThat(result).isEqualTo("Dec 01, 2024 3:30 PM"); // UTC time
@@ -92,7 +91,7 @@ class TimezoneServiceTest {
     @Test
     void formatDateInUserTimezone_WithNullTimezone_FallsBackToUTC() {
         // When
-        String result = timezoneService.formatDateInUserTimezone(testDate, null, "MMM dd, yyyy h:mm a");
+        String result = timezoneService.formatDateInUserTimezone(testInstant, null, "MMM dd, yyyy h:mm a");
 
         // Then
         assertThat(result).isEqualTo("Dec 01, 2024 3:30 PM"); // UTC time

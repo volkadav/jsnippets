@@ -1,14 +1,15 @@
 package com.norrisjackson.jsnippets.controllers;
 
+import com.norrisjackson.jsnippets.controllers.dto.RegistrationRequest;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.UserService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Optional;
@@ -38,42 +39,44 @@ public class Register {
     /**
      * Handle user registration form submission.
      *
-     * @param username  the chosen username
-     * @param password  the user's password
-     * @param password2 password confirmation
-     * @param email     the user's email address
+     * @param request the registration request DTO with validation
+     * @param bindingResult validation results
      * @param redirectAttributes for flash messages
      * @return redirect URL (to login on success, back to register with error on failure)
      */
     @PostMapping("/register")
-    String handleRegister(@RequestParam String username,
-                          @RequestParam String password,
-                          @RequestParam String password2,
-                          @RequestParam String email,
+    String handleRegister(@Valid RegistrationRequest request,
+                          BindingResult bindingResult,
                           RedirectAttributes redirectAttributes) {
-        if (StringUtils.isBlank(username) || StringUtils.isBlank(password) ||
-            StringUtils.isBlank(password2) || StringUtils.isBlank(email)) {
-            redirectAttributes.addFlashAttribute("error", "Please fill in all fields.");
+        // Check for validation errors
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .findFirst()
+                    .orElse("Please correct the errors in the form.");
+            redirectAttributes.addFlashAttribute("error", errorMessage);
             return "redirect:/register";
         }
-        if (!password.equals(password2)) {
+
+        // Check password confirmation
+        if (!request.password().equals(request.password2())) {
             redirectAttributes.addFlashAttribute("error", "Passwords do not match.");
             return "redirect:/register";
         }
-        if (password.length() < 8) {
-            redirectAttributes.addFlashAttribute("error", "Password must be at least 8 characters.");
-            return "redirect:/register";
-        }
-        if (userSvc.userExists(username)) {
+
+        // Check for existing username
+        if (userSvc.userExists(request.username())) {
             redirectAttributes.addFlashAttribute("error", "Username is already taken.");
             return "redirect:/register";
         }
-        if (userSvc.emailExists(email)) {
+
+        // Check for existing email
+        if (userSvc.emailExists(request.email())) {
             redirectAttributes.addFlashAttribute("error", "An account with that email already exists.");
             return "redirect:/register";
         }
 
-        Optional<User> userOpt = userSvc.createUser(username, password, email);
+        Optional<User> userOpt = userSvc.createUser(request.username(), request.password(), request.email());
         if (userOpt.isEmpty()) {
             log.warn("User creation failed!");
             redirectAttributes.addFlashAttribute("error", "An internal error occurred. Please try again.");

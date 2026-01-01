@@ -11,8 +11,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 
+import java.time.Instant;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,15 +52,15 @@ class SnippetServiceTest {
         testSnippet.setId(1L);
         testSnippet.setContents(snippetContent);
         testSnippet.setPoster(testUser);
-        testSnippet.setCreatedAt(new Date());
-        testSnippet.setEditedAt(new Date());
+        testSnippet.setCreatedAt(Instant.now());
+        testSnippet.setEditedAt(Instant.now());
 
         anotherSnippet = new Snippet();
         anotherSnippet.setId(2L);
         anotherSnippet.setContents("console.log('Hello from another user');");
         anotherSnippet.setPoster(anotherUser);
-        anotherSnippet.setCreatedAt(new Date());
-        anotherSnippet.setEditedAt(new Date());
+        anotherSnippet.setCreatedAt(Instant.now());
+        anotherSnippet.setEditedAt(Instant.now());
     }
 
     @Test
@@ -70,8 +70,8 @@ class SnippetServiceTest {
         savedSnippet.setId(1L);
         savedSnippet.setContents(snippetContent);
         savedSnippet.setPoster(testUser);
-        savedSnippet.setCreatedAt(new Date());
-        savedSnippet.setEditedAt(new Date());
+        savedSnippet.setCreatedAt(Instant.now());
+        savedSnippet.setEditedAt(Instant.now());
 
         when(snippetRepository.save(any(Snippet.class))).thenReturn(savedSnippet);
 
@@ -218,15 +218,15 @@ class SnippetServiceTest {
         existingSnippet.setId(1L);
         existingSnippet.setContents(snippetContent);
         existingSnippet.setPoster(testUser);
-        existingSnippet.setCreatedAt(new Date());
-        existingSnippet.setEditedAt(new Date());
+        existingSnippet.setCreatedAt(Instant.now());
+        existingSnippet.setEditedAt(Instant.now());
 
         Snippet updatedSnippet = new Snippet();
         updatedSnippet.setId(1L);
         updatedSnippet.setContents(updatedContent);
         updatedSnippet.setPoster(testUser);
         updatedSnippet.setCreatedAt(existingSnippet.getCreatedAt());
-        updatedSnippet.setEditedAt(new Date());
+        updatedSnippet.setEditedAt(Instant.now());
 
         when(snippetRepository.findById(1L)).thenReturn(Optional.of(existingSnippet));
         when(snippetRepository.save(any(Snippet.class))).thenReturn(updatedSnippet);

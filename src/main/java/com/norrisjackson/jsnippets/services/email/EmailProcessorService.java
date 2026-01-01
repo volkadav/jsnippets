@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.Date;
+import java.util.Date; // Used for jakarta.mail Message API
 import java.util.Optional;
 
 /**
@@ -94,12 +94,11 @@ public class EmailProcessorService {
             if (receivedDate == null) {
                 receivedDate = message.getSentDate();
             }
-            if (receivedDate == null) {
-                receivedDate = new Date();
-            }
+            // Convert to Instant, defaulting to now if no date available
+            Instant receivedInstant = receivedDate != null ? receivedDate.toInstant() : Instant.now();
 
             // Create snippet
-            Snippet snippet = snippetService.createSnippetWithDate(content, user, receivedDate);
+            Snippet snippet = snippetService.createSnippetWithDate(content, user, receivedInstant);
 
             log.info("Created snippet {} from email by user {} ({})",
                     snippet.getId(), user.getUsername(), senderEmail);

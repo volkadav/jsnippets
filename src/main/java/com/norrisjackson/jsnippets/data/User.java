@@ -5,8 +5,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -33,11 +33,11 @@ public class User {
     @NotNull
     @JsonIgnore
     @Column(name = "created_at")
-    private Date createdAt;
+    private Instant createdAt;
 
     @Column(name = "last_login")
     @JsonIgnore
-    private Date lastLoggedInAt;
+    private Instant lastLoggedInAt;
 
     @Column(name = "timezone")
     private String timezone = "UTC"; // Default to UTC, stores IANA timezone identifier

@@ -1,11 +1,11 @@
 package com.norrisjackson.jsnippets.controllers;
 
+import com.norrisjackson.jsnippets.configs.UserIconConfig;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.IdenticonService;
 import com.norrisjackson.jsnippets.services.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.CacheControl;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,7 +17,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,19 +26,14 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class UserIconController {
 
-    private static final int MAX_ICON_SIZE = 32 * 1024; // 32KB
-    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
-            "image/png", "image/jpeg", "image/gif", "image/webp"
-    );
-    private static final int THUMBNAIL_SIZE = 32;
-    private static final int FULL_SIZE = 128;
-
     private final UserService userService;
     private final IdenticonService identiconService;
+    private final UserIconConfig iconConfig;
 
-    public UserIconController(UserService userService, IdenticonService identiconService) {
+    public UserIconController(UserService userService, IdenticonService identiconService, UserIconConfig iconConfig) {
         this.userService = userService;
         this.identiconService = identiconService;
+        this.iconConfig = iconConfig;
     }
 
     /**
@@ -51,7 +45,7 @@ public class UserIconController {
      */
     @GetMapping("/user/{username}/icon")
     public ResponseEntity<byte[]> getUserIcon(@PathVariable String username) {
-        return getUserIconWithSize(username, FULL_SIZE);
+        return getUserIconWithSize(username, iconConfig.getFullSize());
     }
 
     /**
@@ -63,7 +57,7 @@ public class UserIconController {
      */
     @GetMapping("/user/{username}/icon/thumbnail")
     public ResponseEntity<byte[]> getUserIconThumbnail(@PathVariable String username) {
-        return getUserIconWithSize(username, THUMBNAIL_SIZE);
+        return getUserIconWithSize(username, iconConfig.getThumbnailSize());
     }
 
     private ResponseEntity<byte[]> getUserIconWithSize(String username, int size) {
@@ -78,13 +72,13 @@ public class UserIconController {
 
         if (user.getIcon() != null && user.getIconContentType() != null) {
             // User has a custom icon
-            if (size == FULL_SIZE) {
+            if (size == iconConfig.getFullSize()) {
                 imageData = user.getIcon();
             } else {
                 // Resize for thumbnail
                 imageData = identiconService.resizeImage(user.getIcon(), size, size);
             }
-            contentType = size == FULL_SIZE ? user.getIconContentType() : "image/png";
+            contentType = size == iconConfig.getFullSize() ? user.getIconContentType() : "image/png";
         } else {
             // Generate identicon from email
             imageData = identiconService.generateIdenticon(user.getEmail(), size);
@@ -122,15 +116,15 @@ public class UserIconController {
         }
 
         String contentType = file.getContentType();
-        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
+        if (contentType == null || !iconConfig.getAllowedContentTypes().contains(contentType)) {
             redirectAttributes.addFlashAttribute("error",
                     "Invalid file type. Please upload a PNG, JPEG, GIF, or WebP image.");
             return "redirect:/profile";
         }
 
-        if (file.getSize() > MAX_ICON_SIZE) {
+        if (file.getSize() > iconConfig.getMaxSize()) {
             redirectAttributes.addFlashAttribute("error",
-                    "Image file is too large. Maximum size is 32KB.");
+                    String.format("Image file is too large. Maximum size is %d bytes.", iconConfig.getMaxSize()));
             return "redirect:/profile";
         }
 

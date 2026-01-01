@@ -13,7 +13,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Date;
+import java.time.Instant;
+import java.util.Date; // Still needed for jakarta.mail API
 import java.util.Optional;
 import java.util.Properties;
 
@@ -69,7 +70,7 @@ class EmailProcessorServiceTest {
 
         when(processedEmailRepository.existsByMessageId(messageId)).thenReturn(false);
         when(userRepository.findByEmail(senderEmail)).thenReturn(Optional.of(user));
-        when(snippetService.createSnippetWithDate(anyString(), any(User.class), any(Date.class)))
+        when(snippetService.createSnippetWithDate(anyString(), any(User.class), any(Instant.class)))
                 .thenReturn(snippet);
 
         // Act
@@ -77,7 +78,7 @@ class EmailProcessorServiceTest {
 
         // Assert
         assertTrue(shouldDelete);
-        verify(snippetService).createSnippetWithDate(eq(subject + " " + body), eq(user), any(Date.class));
+        verify(snippetService).createSnippetWithDate(eq(subject + " " + body), eq(user), any(Instant.class));
 
         ArgumentCaptor<ProcessedEmail> captor = ArgumentCaptor.forClass(ProcessedEmail.class);
         verify(processedEmailRepository).save(captor.capture());
@@ -107,7 +108,7 @@ class EmailProcessorServiceTest {
 
         when(processedEmailRepository.existsByMessageId(messageId)).thenReturn(false);
         when(userRepository.findByEmail(senderEmail)).thenReturn(Optional.of(user));
-        when(snippetService.createSnippetWithDate(anyString(), any(User.class), any(Date.class)))
+        when(snippetService.createSnippetWithDate(anyString(), any(User.class), any(Instant.class)))
                 .thenReturn(snippet);
 
         // Act
@@ -115,7 +116,7 @@ class EmailProcessorServiceTest {
 
         // Assert
         assertTrue(shouldDelete);
-        verify(snippetService).createSnippetWithDate(eq(subject), any(User.class), any(Date.class));
+        verify(snippetService).createSnippetWithDate(eq(subject), any(User.class), any(Instant.class));
     }
 
     @Test
@@ -136,7 +137,7 @@ class EmailProcessorServiceTest {
 
         when(processedEmailRepository.existsByMessageId(messageId)).thenReturn(false);
         when(userRepository.findByEmail(senderEmail)).thenReturn(Optional.of(user));
-        when(snippetService.createSnippetWithDate(anyString(), any(User.class), any(Date.class)))
+        when(snippetService.createSnippetWithDate(anyString(), any(User.class), any(Instant.class)))
                 .thenReturn(snippet);
 
         // Act
@@ -144,7 +145,7 @@ class EmailProcessorServiceTest {
 
         // Assert
         assertTrue(shouldDelete);
-        verify(snippetService).createSnippetWithDate(eq(body), any(User.class), any(Date.class));
+        verify(snippetService).createSnippetWithDate(eq(body), any(User.class), any(Instant.class));
     }
 
     @Test
@@ -229,7 +230,7 @@ class EmailProcessorServiceTest {
 
         when(processedEmailRepository.existsByMessageId(messageId)).thenReturn(false);
         when(userRepository.findByEmail(senderEmail)).thenReturn(Optional.of(user));
-        when(snippetService.createSnippetWithDate(anyString(), any(User.class), any(Date.class)))
+        when(snippetService.createSnippetWithDate(anyString(), any(User.class), any(Instant.class)))
                 .thenThrow(new RuntimeException("Database error"));
 
         // Act
@@ -249,7 +250,7 @@ class EmailProcessorServiceTest {
         // Arrange
         String senderEmail = "user@example.com";
         String messageId = "<dated@example.com>";
-        Date receivedDate = new Date(1700000000000L); // Fixed timestamp
+        Date receivedDate = new Date(1700000000000L); // Fixed timestamp (jakarta.mail uses Date)
 
         MimeMessage message = createMimeMessage(senderEmail, "Subject", "Body", messageId);
         message.setHeader("Received", receivedDate.toString());
@@ -263,16 +264,16 @@ class EmailProcessorServiceTest {
 
         when(processedEmailRepository.existsByMessageId(messageId)).thenReturn(false);
         when(userRepository.findByEmail(senderEmail)).thenReturn(Optional.of(user));
-        when(snippetService.createSnippetWithDate(anyString(), any(User.class), any(Date.class)))
+        when(snippetService.createSnippetWithDate(anyString(), any(User.class), any(Instant.class)))
                 .thenReturn(snippet);
 
         // Act
         emailProcessorService.processMessage(message);
 
         // Assert
-        ArgumentCaptor<Date> dateCaptor = ArgumentCaptor.forClass(Date.class);
-        verify(snippetService).createSnippetWithDate(anyString(), any(User.class), dateCaptor.capture());
-        assertNotNull(dateCaptor.getValue());
+        ArgumentCaptor<Instant> instantCaptor = ArgumentCaptor.forClass(Instant.class);
+        verify(snippetService).createSnippetWithDate(anyString(), any(User.class), instantCaptor.capture());
+        assertNotNull(instantCaptor.getValue());
     }
 
     /**

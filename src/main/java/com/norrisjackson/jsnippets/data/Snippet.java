@@ -1,6 +1,6 @@
 package com.norrisjackson.jsnippets.data;
 
-import java.util.Date;
+import java.time.Instant;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -27,8 +27,8 @@ public class Snippet {
 
     @Column(name = "created_at")
     @NotNull
-    private Date createdAt;
+    private Instant createdAt;
 
     @Column(name = "edited_at")
-    private Date editedAt;
+    private Instant editedAt;
 }

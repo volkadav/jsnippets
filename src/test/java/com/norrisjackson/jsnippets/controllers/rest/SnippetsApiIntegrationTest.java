@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -78,22 +78,22 @@ class SnippetsApiIntegrationTest {
         testUser.setUsername(TEST_USERNAME);
         testUser.setEmail("jwtuser@example.com");
         testUser.setPasswordHash(passwordEncoder.encode(TEST_PASSWORD));
-        testUser.setCreatedAt(new Date());
+        testUser.setCreatedAt(Instant.now());
         testUser = userRepository.save(testUser);
 
         otherUser = new User();
         otherUser.setUsername(OTHER_USERNAME);
         otherUser.setEmail("other@example.com");
         otherUser.setPasswordHash(passwordEncoder.encode(OTHER_PASSWORD));
-        otherUser.setCreatedAt(new Date());
+        otherUser.setCreatedAt(Instant.now());
         otherUser = userRepository.save(otherUser);
 
         // Create test snippet
         testSnippet = new Snippet();
         testSnippet.setContents("Test snippet for JWT auth");
         testSnippet.setPoster(testUser);
-        testSnippet.setCreatedAt(new Date());
-        testSnippet.setEditedAt(new Date());
+        testSnippet.setCreatedAt(Instant.now());
+        testSnippet.setEditedAt(Instant.now());
         testSnippet = snippetRepository.save(testSnippet);
     }
 
@@ -338,8 +338,10 @@ class SnippetsApiIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        Snippet created = objectMapper.readValue(createResult.getResponse().getContentAsString(), Snippet.class);
-        Long snippetId = created.getId();
+        // Extract snippet ID from SnippetResponse JSON
+        @SuppressWarnings("unchecked")
+        Map<String, Object> responseMap = objectMapper.readValue(createResult.getResponse().getContentAsString(), Map.class);
+        Long snippetId = ((Number) responseMap.get("id")).longValue();
 
         // 3. Read snippet with token
         mockMvc.perform(get(SNIPPETS_PATH + "/" + snippetId)
@@ -443,8 +445,8 @@ class SnippetsApiIntegrationTest {
             Snippet snippet = new Snippet();
             snippet.setContents("Paginated snippet " + i);
             snippet.setPoster(testUser);
-            snippet.setCreatedAt(new Date());
-            snippet.setEditedAt(new Date());
+            snippet.setCreatedAt(Instant.now());
+            snippet.setEditedAt(Instant.now());
             snippetRepository.save(snippet);
         }
 
@@ -456,8 +458,8 @@ class SnippetsApiIntegrationTest {
                 .andExpect(jsonPath("$.content", hasSize(3)))
                 .andExpect(jsonPath("$.totalElements", is(6)))
                 .andExpect(jsonPath("$.totalPages", is(2)))
-                .andExpect(jsonPath("$.number", is(0)))
-                .andExpect(jsonPath("$.size", is(3)));
+                .andExpect(jsonPath("$.pageNumber", is(0)))
+                .andExpect(jsonPath("$.pageSize", is(3)));
     }
 
     @Test
@@ -469,8 +471,8 @@ class SnippetsApiIntegrationTest {
             Snippet snippet = new Snippet();
             snippet.setContents("Paginated snippet " + i);
             snippet.setPoster(testUser);
-            snippet.setCreatedAt(new Date());
-            snippet.setEditedAt(new Date());
+            snippet.setCreatedAt(Instant.now());
+            snippet.setEditedAt(Instant.now());
             snippetRepository.save(snippet);
         }
 
@@ -480,7 +482,7 @@ class SnippetsApiIntegrationTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(3)))
-                .andExpect(jsonPath("$.number", is(1)));
+                .andExpect(jsonPath("$.pageNumber", is(1)));
     }
 
     // ==================== Validation Tests ====================
@@ -556,8 +558,8 @@ class SnippetsApiIntegrationTest {
         Snippet otherSnippet = new Snippet();
         otherSnippet.setContents("Other user's snippet");
         otherSnippet.setPoster(otherUser);
-        otherSnippet.setCreatedAt(new Date());
-        otherSnippet.setEditedAt(new Date());
+        otherSnippet.setCreatedAt(Instant.now());
+        otherSnippet.setEditedAt(Instant.now());
         otherSnippet = snippetRepository.save(otherSnippet);
 
         Map<String, String> updates = new HashMap<>();
@@ -592,8 +594,8 @@ class SnippetsApiIntegrationTest {
         Snippet otherSnippet = new Snippet();
         otherSnippet.setContents("Other user's snippet to delete");
         otherSnippet.setPoster(otherUser);
-        otherSnippet.setCreatedAt(new Date());
-        otherSnippet.setEditedAt(new Date());
+        otherSnippet.setCreatedAt(Instant.now());
+        otherSnippet.setEditedAt(Instant.now());
         otherSnippet = snippetRepository.save(otherSnippet);
 
         mockMvc.perform(delete(SNIPPETS_PATH + "/" + otherSnippet.getId())

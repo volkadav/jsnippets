@@ -4,7 +4,7 @@ import com.norrisjackson.jsnippets.data.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Date;
+import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,7 +22,7 @@ class ProfileServiceTest {
         testUser.setId(1L);
         testUser.setUsername("testuser");
         testUser.setEmail("test@example.com");
-        testUser.setCreatedAt(new Date());
+        testUser.setCreatedAt(Instant.now());
         testUser.setTimezone("America/New_York");
     }
 

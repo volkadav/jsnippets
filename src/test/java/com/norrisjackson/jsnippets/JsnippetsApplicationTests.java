@@ -15,9 +15,9 @@ import com.norrisjackson.jsnippets.data.SnippetRepository;
 import com.norrisjackson.jsnippets.data.UserRepository;
 import com.norrisjackson.jsnippets.controllers.rest.dto.AuthenticationRequest;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -50,7 +50,7 @@ class JsnippetsApplicationTests {
 		snippetRepository.deleteAll();
 		userRepository.deleteAll();
 
-        Date now = new Date();
+        Instant now = Instant.now();
 
 		User alice = new User();
 		alice.setUsername("alice");

@@ -15,6 +15,7 @@ import java.util.Optional;
 
 @Service
 @Slf4j
+@Transactional(readOnly = true)
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -70,6 +71,7 @@ public class UserService implements UserDetailsService {
      * @param email    the email address
      * @return Optional containing the created User, or empty if creation fails
      */
+    @Transactional
     public Optional<User> createUser(String username,
                            String password,
                            String email) {
@@ -77,7 +79,7 @@ public class UserService implements UserDetailsService {
         user.setUsername(username);
         user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(password));
-        user.setCreatedAt(new java.util.Date());
+        user.setCreatedAt(java.time.Instant.now());
 
         return Optional.of(userRepository.save(user));
     }
@@ -98,6 +100,7 @@ public class UserService implements UserDetailsService {
      * @param user the user entity to update
      * @return the updated user
      */
+    @Transactional
     public User updateUser(User user) {
         return userRepository.save(user);
     }

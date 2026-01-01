@@ -12,7 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -44,7 +44,7 @@ class UserServiceTest {
         testUser.setUsername(testUsername);
         testUser.setEmail(testEmail);
         testUser.setPasswordHash(encodedPassword);
-        testUser.setCreatedAt(new Date());
+        testUser.setCreatedAt(Instant.now());
         testUser.setTimezone("America/New_York");
     }
 
@@ -152,7 +152,7 @@ class UserServiceTest {
         savedUser.setUsername(testUsername);
         savedUser.setEmail(testEmail);
         savedUser.setPasswordHash(encodedPassword);
-        savedUser.setCreatedAt(new Date());
+        savedUser.setCreatedAt(Instant.now());
 
         when(passwordEncoder.encode(testPassword)).thenReturn(encodedPassword);
         when(userRepository.save(any(User.class))).thenReturn(savedUser);

@@ -1,16 +1,17 @@
 package com.norrisjackson.jsnippets.controllers;
 
+import com.norrisjackson.jsnippets.controllers.dto.ProfileUpdateRequest;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.UserService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 
@@ -185,63 +186,53 @@ public class Profile {
     /**
      * Handle profile update form submission.
      *
-     * @param email the updated email address
-     * @param timezone the updated timezone
-     * @param bio the updated bio (optional)
+     * @param request the profile update request DTO with validation
+     * @param bindingResult validation results
      * @param model the Spring MVC model
      * @param redirectAttributes for flash messages
      * @return redirect URL
      */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/profile")
-    String handleProfileUpdate(@RequestParam String email,
-                               @RequestParam String timezone,
-                               @RequestParam(required = false) String bio,
+    String handleProfileUpdate(@Valid ProfileUpdateRequest request,
+                               BindingResult bindingResult,
                                Model model,
                                RedirectAttributes redirectAttributes) {
         User currentUser = (User) model.getAttribute("currentUser");
 
-        // Validate input
-        if (StringUtils.isBlank(email) || StringUtils.isBlank(timezone)) {
-            redirectAttributes.addFlashAttribute("error", "Please fill in all required fields.");
-            return "redirect:/profile";
-        }
-
-        // Basic email validation
-        if (!email.contains("@") || !email.contains(".")) {
-            redirectAttributes.addFlashAttribute("error", "Please enter a valid email address.");
+        // Check for validation errors
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .findFirst()
+                    .orElse("Please correct the errors in the form.");
+            redirectAttributes.addFlashAttribute("error", errorMessage);
             return "redirect:/profile";
         }
 
         // Validate timezone
         try {
-            ZoneId.of(timezone);
+            ZoneId.of(request.timezone());
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Please select a valid timezone.");
             return "redirect:/profile";
         }
 
         // Check if email is already taken by another user
-        if (!email.equals(currentUser.getEmail()) && userService.emailExists(email)) {
+        if (!request.email().equals(currentUser.getEmail()) && userService.emailExists(request.email())) {
             redirectAttributes.addFlashAttribute("error", "An account with that email already exists.");
-            return "redirect:/profile";
-        }
-
-        // Validate bio length
-        if (bio != null && bio.length() > 4000) {
-            redirectAttributes.addFlashAttribute("error", "Bio must be 4000 characters or less.");
             return "redirect:/profile";
         }
 
         // Update user profile
         try {
-            currentUser.setEmail(email);
-            currentUser.setTimezone(timezone);
-            
+            currentUser.setEmail(request.email());
+            currentUser.setTimezone(request.timezone());
+
             // Sanitize bio - strip HTML tags and escape special characters
-            if (bio != null) {
+            if (request.bio() != null) {
                 // Remove HTML tags
-                String sanitizedBio = bio.replaceAll("<[^>]*>", "");
+                String sanitizedBio = request.bio().replaceAll("<[^>]*>", "");
                 // Trim whitespace
                 sanitizedBio = sanitizedBio.trim();
                 // Set to null if empty after sanitization

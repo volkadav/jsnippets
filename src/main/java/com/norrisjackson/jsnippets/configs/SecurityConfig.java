@@ -12,6 +12,8 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -49,7 +51,7 @@ public class SecurityConfig {
     public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
         http
             .securityMatcher("/api/**")
-            .csrf(csrf -> csrf.disable()) // Disable CSRF for stateless API
+            .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for stateless API
             .authorizeHttpRequests(authz -> authz
                     .requestMatchers("/api/auth/**", "/api/v1/auth/**").permitAll() // Allow authentication endpoints
                     .anyRequest().authenticated()) // All other API requests require authentication
@@ -61,6 +63,16 @@ public class SecurityConfig {
                         response.setContentType("application/json");
                         response.getWriter().write("{\"error\":\"Unauthorized\"}");
                     }))
+            .headers(headers -> headers
+                    .contentSecurityPolicy(csp -> csp
+                            .policyDirectives("default-src 'none'; " +
+                                    "script-src 'none'; " +
+                                    "connect-src 'self'; " +
+                                    "img-src 'none'; " +
+                                    "style-src 'none'; " +
+                                    "frame-ancestors 'none'"))
+                    .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
+            )
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class) // Add rate limiting first
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
 
@@ -84,7 +96,20 @@ public class SecurityConfig {
                             "/favicon.ico", "/actuator", "/actuator/health/**", "/actuator/info").permitAll()
                     .anyRequest().authenticated())
             .formLogin(form -> form.loginPage("/login").failureHandler(failureHandler).permitAll())
-            .logout(LogoutConfigurer::permitAll);
+            .logout(LogoutConfigurer::permitAll)
+            .headers(headers -> headers
+                    .contentSecurityPolicy(csp -> csp
+                            .policyDirectives("default-src 'self'; " +
+                                    "script-src 'self' 'unsafe-inline'; " + // unsafe-inline needed for Bootstrap JS
+                                    "style-src 'self' 'unsafe-inline'; " +  // unsafe-inline needed for Bootstrap CSS
+                                    "img-src 'self' data:; " + // data: for identicons/user icons
+                                    "font-src 'self'; " +
+                                    "connect-src 'self'; " +
+                                    "frame-ancestors 'none'; " + // Prevent clickjacking
+                                    "base-uri 'self'; " +
+                                    "form-action 'self'"))
+                    .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny) // Prevent embedding in frames
+            );
         return http.build();
     }
 }

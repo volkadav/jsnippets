@@ -7,29 +7,24 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.Date;
 
 @Service
 @Slf4j
 public class TimezoneService {
 
     /**
-     * Converts a UTC Date to the user's timezone and formats it
-     * @param utcDate The date in UTC (from database)
+     * Converts a UTC Instant to the user's timezone and formats it
+     * @param utcInstant The instant in UTC (from database)
      * @param userTimezone The user's preferred timezone (IANA ID like "America/New_York")
      * @param pattern The formatting pattern (e.g., "MMM dd, yyyy HH:mm")
      * @return Formatted date string in user's timezone
      */
-    public String formatDateInUserTimezone(Date utcDate, String userTimezone, String pattern) {
-        if (utcDate == null) {
+    public String formatDateInUserTimezone(Instant utcInstant, String userTimezone, String pattern) {
+        if (utcInstant == null) {
             return "";
         }
         
         try {
-            // Convert Date to Instant (UTC)
-            Instant instant = utcDate.toInstant();
-            
             // Get the user's timezone, fallback to UTC if invalid
             ZoneId zoneId;
             try {
@@ -40,28 +35,28 @@ public class TimezoneService {
             }
             
             // Convert to user's timezone
-            ZonedDateTime zonedDateTime = instant.atZone(zoneId);
-            
+            ZonedDateTime zonedDateTime = utcInstant.atZone(zoneId);
+
             // Format using the provided pattern
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
             return zonedDateTime.format(formatter);
             
         } catch (Exception e) {
-            log.error("Error formatting date {} with timezone {} and pattern {}", 
-                     utcDate, userTimezone, pattern, e);
+            log.error("Error formatting instant {} with timezone {} and pattern {}",
+                     utcInstant, userTimezone, pattern, e);
             // Fallback to simple string representation
-            return utcDate.toString();
+            return utcInstant.toString();
         }
     }
 
     /**
-     * Converts a UTC Date to the user's timezone and formats it with a default pattern
-     * @param utcDate The date in UTC (from database)
+     * Converts a UTC Instant to the user's timezone and formats it with a default pattern
+     * @param utcInstant The instant in UTC (from database)
      * @param userTimezone The user's preferred timezone
      * @return Formatted date string like "Dec 01, 2024 3:30 PM"
      */
-    public String formatDateInUserTimezone(Date utcDate, String userTimezone) {
-        return formatDateInUserTimezone(utcDate, userTimezone, "MMM dd, yyyy h:mm a");
+    public String formatDateInUserTimezone(Instant utcInstant, String userTimezone) {
+        return formatDateInUserTimezone(utcInstant, userTimezone, "MMM dd, yyyy h:mm a");
     }
 
     /**

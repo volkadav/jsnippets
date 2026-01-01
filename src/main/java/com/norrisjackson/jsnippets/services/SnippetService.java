@@ -10,7 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,7 +37,7 @@ public class SnippetService {
         snippet.setContents(snippetContent);
         snippet.setPoster(poster);
 
-        Date now = new Date();
+        Instant now = Instant.now();
         snippet.setCreatedAt(now);
         snippet.setEditedAt(now);
 
@@ -50,11 +50,11 @@ public class SnippetService {
      *
      * @param snippetContent the snippet text content
      * @param poster         the user who owns the snippet
-     * @param createdAt      the date to use for createdAt and editedAt
+     * @param createdAt      the instant to use for createdAt and editedAt
      * @return the saved snippet
      */
     @Transactional
-    public Snippet createSnippetWithDate(String snippetContent, User poster, Date createdAt) {
+    public Snippet createSnippetWithDate(String snippetContent, User poster, Instant createdAt) {
         Snippet snippet = new Snippet();
         snippet.setContents(snippetContent);
         snippet.setPoster(poster);
@@ -173,7 +173,7 @@ public class SnippetService {
         return snippetRepository.findById(id).map(existingSnippet -> {
             existingSnippet.setContents(updatedSnippetContents);
 
-            Date now = new Date();
+            Instant now = Instant.now();
             existingSnippet.setEditedAt(now);
 
             return snippetRepository.save(existingSnippet);

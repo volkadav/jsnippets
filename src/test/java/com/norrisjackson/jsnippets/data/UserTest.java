@@ -3,7 +3,7 @@ package com.norrisjackson.jsnippets.data;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Date;
+import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -21,7 +21,7 @@ class UserTest {
         user.setUsername("testuser");
         user.setEmail("test@example.com");
         user.setPasswordHash("hashedpassword");
-        user.setCreatedAt(new Date());
+        user.setCreatedAt(Instant.now());
     }
 
     @Test

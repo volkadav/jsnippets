@@ -11,52 +11,108 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Rate limiting filter for authentication endpoints to prevent brute-force attacks.
- * Uses a sliding window approach with in-memory storage.
+ * Rate limiting filter for API endpoints to prevent abuse and brute-force attacks.
+ * Uses a sliding window approach with pluggable storage backends (in-memory or Redis).
  *
- * For production deployments with multiple instances, consider using Redis-based rate limiting.
+ * Different rate limits apply to different endpoint types:
+ * - Authentication endpoints: Stricter limits (default: 20 req/min)
+ * - General API endpoints: More permissive (default: 300 req/min)
+ *
+ * For production deployments with multiple instances, use Redis-based rate limiting
+ * by setting rate.limit.storage=redis
  */
 @Component
 @Slf4j
 public class RateLimitingFilter extends OncePerRequestFilter {
 
-    private final Map<String, RateLimitBucket> buckets = new ConcurrentHashMap<>();
+    private final RateLimiter rateLimiter;
 
-    @Value("${rate.limit.requests:10}")
-    private int maxRequests;
+    // Authentication endpoint limits (stricter)
+    @Value("${rate.limit.auth.requests:20}")
+    private int authMaxRequests;
 
-    @Value("${rate.limit.window-seconds:60}")
-    private int windowSeconds;
+    @Value("${rate.limit.auth.window-seconds:60}")
+    private int authWindowSeconds;
+
+    // General API endpoint limits (more permissive)
+    @Value("${rate.limit.api.requests:300}")
+    private int apiMaxRequests;
+
+    @Value("${rate.limit.api.window-seconds:60}")
+    private int apiWindowSeconds;
+
+    @Value("${rate.limit.enabled:true}")
+    private boolean rateLimitEnabled;
+
+    public RateLimitingFilter(RateLimiter rateLimiter) {
+        this.rateLimiter = rateLimiter;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
+        if (!rateLimitEnabled) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String path = request.getRequestURI();
+        String clientId = getClientIdentifier(request);
 
-        // Only rate limit authentication endpoints
-        if (path.contains("/api/v1/auth/login") || path.contains("/api/auth/login")) {
-            String clientKey = getClientIdentifier(request);
-
-            if (!isAllowed(clientKey)) {
-                log.warn("Rate limit exceeded for client: {}", clientKey);
-                response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-                response.setContentType("application/json");
-                response.getWriter().write(String.format(
-                        "{\"code\":\"RATE_LIMIT_EXCEEDED\",\"message\":\"Too many requests. Please try again later.\",\"timestamp\":\"%s\",\"path\":\"%s\"}",
-                        java.time.Instant.now().toString(),
-                        path
-                ));
+        // Determine which rate limit to apply
+        if (isAuthenticationEndpoint(path)) {
+            // Stricter rate limiting for authentication endpoints
+            String key = "auth:" + clientId;
+            if (!rateLimiter.isAllowed(key, authMaxRequests, authWindowSeconds)) {
+                log.warn("Auth rate limit exceeded for client: {} on path: {}", clientId, path);
+                sendRateLimitResponse(response, path);
+                return;
+            }
+        } else if (isApiEndpoint(path)) {
+            // General API rate limiting
+            String key = "api:" + clientId;
+            if (!rateLimiter.isAllowed(key, apiMaxRequests, apiWindowSeconds)) {
+                log.warn("API rate limit exceeded for client: {} on path: {}", clientId, path);
+                sendRateLimitResponse(response, path);
                 return;
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Check if the path is an authentication endpoint.
+     */
+    private boolean isAuthenticationEndpoint(String path) {
+        return path.contains("/api/v1/auth/login") ||
+               path.contains("/api/auth/login") ||
+               path.contains("/api/v1/auth/register") ||
+               path.contains("/api/auth/register");
+    }
+
+    /**
+     * Check if the path is an API endpoint (but not authentication).
+     */
+    private boolean isApiEndpoint(String path) {
+        return path.startsWith("/api/") && !isAuthenticationEndpoint(path);
+    }
+
+    /**
+     * Send a rate limit exceeded response.
+     */
+    private void sendRateLimitResponse(HttpServletResponse response, String path) throws IOException {
+        response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+        response.setContentType("application/json");
+        response.setHeader("Retry-After", "60"); // Hint to client when to retry
+        response.getWriter().write(String.format(
+                "{\"code\":\"RATE_LIMIT_EXCEEDED\",\"message\":\"Too many requests. Please try again later.\",\"timestamp\":\"%s\",\"path\":\"%s\"}",
+                java.time.Instant.now().toString(),
+                path
+        ));
     }
 
     /**
@@ -70,53 +126,6 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             return xForwardedFor.split(",")[0].trim();
         }
         return request.getRemoteAddr();
-    }
-
-    /**
-     * Check if the request is allowed based on rate limiting rules.
-     */
-    private boolean isAllowed(String clientKey) {
-        long currentTime = System.currentTimeMillis();
-        long windowStart = currentTime - (windowSeconds * 1000L);
-
-        buckets.compute(clientKey, (key, bucket) -> {
-            if (bucket == null || bucket.windowStart < windowStart) {
-                // Create new bucket or reset expired bucket
-                return new RateLimitBucket(currentTime, new AtomicInteger(1));
-            }
-            bucket.count.incrementAndGet();
-            return bucket;
-        });
-
-        RateLimitBucket bucket = buckets.get(clientKey);
-        boolean allowed = bucket.count.get() <= maxRequests;
-
-        // Cleanup old buckets periodically (simple approach)
-        if (buckets.size() > 10000) {
-            cleanupOldBuckets(windowStart);
-        }
-
-        return allowed;
-    }
-
-    /**
-     * Remove expired buckets to prevent memory leaks.
-     */
-    private void cleanupOldBuckets(long windowStart) {
-        buckets.entrySet().removeIf(entry -> entry.getValue().windowStart < windowStart);
-    }
-
-    /**
-     * Inner class to hold rate limit bucket data.
-     */
-    private static class RateLimitBucket {
-        final long windowStart;
-        final AtomicInteger count;
-
-        RateLimitBucket(long windowStart, AtomicInteger count) {
-            this.windowStart = windowStart;
-            this.count = count;
-        }
     }
 }
 
