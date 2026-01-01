@@ -22,7 +22,13 @@ web ui and rest api stood up.
 ## future work ideas
 
 - integrate with ticket systems like jira?
+- slack integration?
+- periodic summary/digest generation (to whichever channels, like email, slack etc.)
 - fancier web reporting ui to view updates along an org chart tree?
+
+## release history
+
+- 1.0: January 2026 - initial public release
 
 ## quickstart run
 
@@ -70,6 +76,7 @@ The application uses Spring Boot profiles for environment-specific configuration
 ### quick configuration
 
 Set profile via environment variable or command line:
+
 ```bash
 # Development mode (verbose logging)
 export SPRING_PROFILES_ACTIVE=development
@@ -165,6 +172,7 @@ docker build -t jsnippets:latest .
 ```
 
 The build script automatically:
+
 - Detects podman or docker
 - Extracts version from pom.xml
 - Adds git commit hash (marks `-dirty` if uncommitted changes)
