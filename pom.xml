@@ -9,7 +9,7 @@
     </parent>
     <groupId>com.norrisjackson</groupId>
     <artifactId>jsnippets</artifactId>
-    <version>1.0.0-rc2</version>
+    <version>1.0.0-rc3-SNAPSHOT</version>
     <name>jsnippets</name>
     <description>snippets server</description>
 
