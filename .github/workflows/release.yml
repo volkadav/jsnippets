@@ -51,7 +51,8 @@ jobs:
             -Dtag=${{ github.event.inputs.releaseVersion }} \
             -DpushChanges=true
 
-          mvn -B release:perform
+          mvn -B release:perform \
+            -Darguments="-Dmaven.deploy.skip=true"
 
       - name: Show resulting version
         run: cat pom.xml
