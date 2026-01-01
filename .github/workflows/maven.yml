@@ -41,7 +41,7 @@ jobs:
 
     - name: Rename JAR
       run: |
-          JAR=$(ls target/*-SNAPSHOT.jar | head -n 1)
+          JAR=$(ls target/jsnippets-*.jar | head -n 1)
           BASENAME=$(basename "$JAR" .jar)
           mv "$JAR" "target/${BASENAME}-${BUILD_TIMESTAMP}.jar"
 
