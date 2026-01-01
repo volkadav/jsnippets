@@ -126,6 +126,7 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new IllegalStateException("Follower user not found"));
 
         managedFollower.getFollowedUsers().add(toFollow);
+        userRepository.save(managedFollower); // Explicitly save to ensure changes are persisted
 
         return true;
     }
@@ -148,6 +149,7 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new IllegalStateException("Follower user not found"));
 
         managedFollower.getFollowedUsers().remove(toUnfollow);
+        userRepository.save(managedFollower); // Explicitly save to ensure changes are persisted
 
         return true;
     }

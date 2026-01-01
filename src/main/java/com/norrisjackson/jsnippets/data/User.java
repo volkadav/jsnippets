@@ -15,9 +15,11 @@ import java.util.List;
 @Setter
 @RequiredArgsConstructor
 @ToString(exclude = {"followedUsers", "followers"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @NotNull

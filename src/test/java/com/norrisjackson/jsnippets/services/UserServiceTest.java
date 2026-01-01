@@ -259,12 +259,14 @@ class UserServiceTest {
         when(userRepository.isFollowing(1L, 2L)).thenReturn(false);
         // Mock repository to return the follower with eagerly loaded followedUsers
         when(userRepository.findByIdWithFollowedUsers(1L)).thenReturn(Optional.of(follower));
+        // Mock save to return the same user
+        when(userRepository.save(follower)).thenReturn(follower);
 
         boolean result = userService.followUser(follower, toFollow);
 
         assertThat(result).isTrue();
         assertThat(follower.getFollowedUsers()).contains(toFollow);
-        // No save() call expected - @Transactional auto-flushes managed entities
+        verify(userRepository).save(follower); // Verify save is called to persist changes
     }
 
     @Test
@@ -304,12 +306,14 @@ class UserServiceTest {
         when(userRepository.isFollowing(1L, 2L)).thenReturn(true);
         // Mock repository to return the follower with eagerly loaded followedUsers
         when(userRepository.findByIdWithFollowedUsers(1L)).thenReturn(Optional.of(follower));
+        // Mock save to return the same user
+        when(userRepository.save(follower)).thenReturn(follower);
 
         boolean result = userService.unfollowUser(follower, toUnfollow);
 
         assertThat(result).isTrue();
         assertThat(follower.getFollowedUsers()).doesNotContain(toUnfollow);
-        // No save() call expected - @Transactional auto-flushes managed entities
+        verify(userRepository).save(follower); // Verify save is called to persist changes
     }
 
     @Test
