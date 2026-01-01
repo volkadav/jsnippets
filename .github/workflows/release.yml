@@ -52,3 +52,26 @@ jobs:
 
       - name: Show resulting version
         run: cat pom.xml
+
+      # Create GitHub Release for this tag if it doesn't exist
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          tag_name: ${{ github.event.inputs.releaseVersion }}
+          release_name: "Release ${{ github.event.inputs.releaseVersion }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Upload the JAR as an asset in the release
+      - name: Upload Release Asset (JAR)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.JAR }}
+          asset_name: jsnippets-${{ github.event.inputs.releaseVersion }}.jar
+          asset_content_type: application/java-archive
