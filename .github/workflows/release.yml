@@ -69,6 +69,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Set JAR path
+      - name: Identify JAR artifact
+        id: jarfile
+        run: |
+          FILE=$(find . -type f -path "*/target/*.jar" -name "*${{ github.event.inputs.releaseVersion }}.jar" | head -n1)
+          echo "JAR=$FILE" >> $GITHUB_ENV
+          echo "Found JAR: $FILE"
+
       # Upload the JAR as an asset in the release
       - name: Upload Release Asset (JAR)
         uses: actions/upload-release-asset@v1
