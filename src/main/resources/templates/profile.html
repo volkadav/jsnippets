@@ -13,7 +13,7 @@
         <div class="col-md-8">
             <!-- Profile Header with Icon -->
             <div class="d-flex align-items-center mb-4">
-                <img th:src="@{'/user/' + ${user.username} + '/icon'}"
+                <img th:src="@{'/user/' + ${user.username} + '/icon?v=' + ${#dates.createNow().time}}"
                      alt="Profile icon"
                      class="rounded-circle me-3"
                      style="width: 80px; height: 80px; object-fit: cover;">
@@ -67,7 +67,7 @@
                 </div>
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
-                        <img th:src="@{'/user/' + ${user.username} + '/icon'}"
+                        <img th:src="@{'/user/' + ${user.username} + '/icon?v=' + ${#dates.createNow().time}}"
                              alt="Current profile icon"
                              class="rounded-circle me-3"
                              style="width: 64px; height: 64px; object-fit: cover;">

@@ -1,5 +1,6 @@
 package com.norrisjackson.jsnippets.configs;
 
+import com.norrisjackson.jsnippets.security.CustomAuthenticationSuccessHandler;
 import com.norrisjackson.jsnippets.security.JwtAuthenticationFilter;
 import com.norrisjackson.jsnippets.security.RateLimitingFilter;
 import com.norrisjackson.jsnippets.security.CustomAuthenticationFailureHandler;
@@ -27,11 +28,16 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RateLimitingFilter rateLimitingFilter;
     private final CustomAuthenticationFailureHandler failureHandler;
+    private final CustomAuthenticationSuccessHandler successHandler;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, RateLimitingFilter rateLimitingFilter, CustomAuthenticationFailureHandler failureHandler) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                         RateLimitingFilter rateLimitingFilter,
+                         CustomAuthenticationFailureHandler failureHandler,
+                         CustomAuthenticationSuccessHandler successHandler) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.rateLimitingFilter = rateLimitingFilter;
         this.failureHandler = failureHandler;
+        this.successHandler = successHandler;
     }
 
     /**
@@ -95,7 +101,11 @@ public class SecurityConfig {
                             "/user/*/icon", "/user/*/icon/thumbnail",
                             "/favicon.ico", "/actuator", "/actuator/health/**", "/actuator/info").permitAll()
                     .anyRequest().authenticated())
-            .formLogin(form -> form.loginPage("/login").failureHandler(failureHandler).permitAll())
+            .formLogin(form -> form
+                    .loginPage("/login")
+                    .successHandler(successHandler)
+                    .failureHandler(failureHandler)
+                    .permitAll())
             .logout(LogoutConfigurer::permitAll)
             .headers(headers -> headers
                     .contentSecurityPolicy(csp -> csp

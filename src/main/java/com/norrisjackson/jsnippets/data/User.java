@@ -46,8 +46,7 @@ public class User {
     @Column(name = "bio")
     private String bio; // Optional free-form bio text, max 4000 characters
 
-    @Lob
-    @Column(name = "icon")
+    @Column(name = "icon", columnDefinition = "bytea")
     @JsonIgnore
     private byte[] icon; // Optional user icon image, max 32KB
 

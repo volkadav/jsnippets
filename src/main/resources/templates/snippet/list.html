@@ -9,7 +9,7 @@
 <body>
 <div class="container mt-5" th:with="baseUrl=${authUser.id == viewUser.id ? '/snippets' : '/snippets/' + viewUser.username}">
     <div class="d-flex align-items-center mb-4">
-        <img th:src="@{'/user/' + ${viewUser.username} + '/icon'}"
+        <img th:src="@{'/user/' + ${viewUser.username} + '/icon?v=' + ${#dates.createNow().time}}"
              alt="User icon"
              class="rounded-circle me-3"
              style="width: 64px; height: 64px; object-fit: cover;">

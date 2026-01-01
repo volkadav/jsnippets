@@ -80,7 +80,7 @@
             <div class="d-flex justify-content-between align-items-start">
                 <div class="d-flex flex-grow-1">
                     <a th:href="@{'/profile/' + ${snippet.poster.username}}" class="me-3">
-                        <img th:src="@{'/user/' + ${snippet.poster.username} + '/icon/thumbnail'}"
+                        <img th:src="@{'/user/' + ${snippet.poster.username} + '/icon/thumbnail?v=' + ${#dates.createNow().time}}"
                              alt="User icon"
                              class="rounded-circle"
                              style="width: 32px; height: 32px; object-fit: cover;">
