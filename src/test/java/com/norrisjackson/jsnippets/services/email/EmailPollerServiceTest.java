@@ -16,21 +16,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class EmailPollerServiceTest {
 
-    @Mock
-    private EmailIngestConfig config;
-
-    @Mock
-    private EmailProcessorService emailProcessor;
-
-    private EmailPollerService emailPollerService;
-
-    // Real instance used for buildMailProperties tests (method lives on the config now)
     private EmailIngestConfig realConfig;
 
     @BeforeEach
     void setUp() {
-        when(config.getPollIntervalMinutes()).thenReturn(10);
-        emailPollerService = new EmailPollerService(config, emailProcessor);
         realConfig = new EmailIngestConfig();
     }
 
