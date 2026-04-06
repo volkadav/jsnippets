@@ -25,19 +25,13 @@
         <commons-lang3.version>3.18.0</commons-lang3.version>
     </properties>
 
+    <!-- note for mvn release plugin: use the github "release" action instead of cli -->
     <scm>
         <connection>scm:git:https://github.com/volkadav/jsnippets.git</connection>
-        <developerConnection>scm:git:git@github.com:volkadav/jsnippets.git</developerConnection>
+        <developerConnection>scm:git:https://github.com/volkadav/jsnippets.git</developerConnection>
         <url>https://github.com/volkadav/jsnippets</url>
         <tag>HEAD</tag>
     </scm>
-
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <url>https://maven.pkg.github.com/volkadav/jsnippets</url>
-        </repository>
-    </distributionManagement>
 
     <dependencies>
         <dependency>
