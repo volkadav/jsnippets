@@ -41,9 +41,6 @@ class JsnippetsApplicationTests {
     @Autowired
 	private SnippetRepository snippetRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
 	@BeforeAll
 	static void setup(@Autowired UserRepository userRepository, @Autowired SnippetRepository snippetRepository, @Autowired PasswordEncoder passwordEncoder) {
 		// Clear and populate test data

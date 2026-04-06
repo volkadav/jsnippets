@@ -31,7 +31,7 @@ public record PageResponse<T>(
     public static <T> PageResponse<T> from(Page<?> page, List<T> content) {
         return new PageResponse<>(
             content,
-            page.getNumber(),
+            page.getNumber() + 1,   // convert to 1-based to match API contract
             page.getSize(),
             page.getTotalElements(),
             page.getTotalPages(),

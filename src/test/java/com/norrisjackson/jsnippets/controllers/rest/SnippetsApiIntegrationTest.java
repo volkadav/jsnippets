@@ -341,7 +341,7 @@ class SnippetsApiIntegrationTest {
         // Extract snippet ID from SnippetResponse JSON
         @SuppressWarnings("unchecked")
         Map<String, Object> responseMap = objectMapper.readValue(createResult.getResponse().getContentAsString(), Map.class);
-        Long snippetId = ((Number) responseMap.get("id")).longValue();
+        long snippetId = ((Number) responseMap.get("id")).longValue();
 
         // 3. Read snippet with token
         mockMvc.perform(get(SNIPPETS_PATH + "/" + snippetId)
@@ -450,14 +450,14 @@ class SnippetsApiIntegrationTest {
         }
 
         mockMvc.perform(get(SNIPPETS_PATH)
-                        .param("pageNumber", "0")
+                        .param("pageNumber", "1")
                         .param("pageSize", "3")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(3)))
                 .andExpect(jsonPath("$.totalElements", is(6)))
                 .andExpect(jsonPath("$.totalPages", is(2)))
-                .andExpect(jsonPath("$.pageNumber", is(0)))
+                .andExpect(jsonPath("$.pageNumber", is(1)))
                 .andExpect(jsonPath("$.pageSize", is(3)));
     }
 
@@ -476,12 +476,12 @@ class SnippetsApiIntegrationTest {
         }
 
         mockMvc.perform(get(SNIPPETS_PATH)
-                        .param("pageNumber", "1")
+                        .param("pageNumber", "2")
                         .param("pageSize", "3")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(3)))
-                .andExpect(jsonPath("$.pageNumber", is(1)));
+                .andExpect(jsonPath("$.pageNumber", is(2)));
     }
 
     // ==================== Validation Tests ====================

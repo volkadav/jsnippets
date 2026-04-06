@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,6 +35,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping(path = "/api/v1/snippets", produces = "application/json")
+@Validated
 @Slf4j
 @Tag(name = "Snippets", description = "Operations related to JSnippets snippet data")
 public class SnippetsApi {
@@ -75,18 +78,19 @@ public class SnippetsApi {
     @Operation(summary = "Get paginated list of snippets for the authenticated user")
     public ResponseEntity<?> findAllForUser(
                                      @AuthenticationPrincipal UserDetails authedUser,
-                                     @Parameter(description = "Page number") @RequestParam("pageNumber") Optional<Integer> pageNumber,
-                                     @Parameter(description = "Page size") @RequestParam("pageSize") Optional<Integer> pageSize,
+                                     @Parameter(description = "Page number (1-based)", example = "1") @Min(1) @RequestParam(value = "pageNumber", defaultValue = "1") int pageNumber,
+                                     @Parameter(description = "Page size") @RequestParam(value = "pageSize", required = false) Integer pageSize,
                                      HttpServletRequest request) {
         UserOrError userOrError = getCurrentUserOrError(authedUser, request);
         if (userOrError.hasError()) return userOrError.errorResponse;
         User currentUser = userOrError.user;
 
-        int effectivePageSize = paginationConfig.getEffectivePageSize(pageSize.orElse(null));
-        PageRequest page = PageRequest.of(pageNumber.orElse(0), effectivePageSize,
+        int effectivePageSize = paginationConfig.getEffectivePageSize(pageSize);
+        PageRequest page = PageRequest.of(pageNumber - 1, effectivePageSize,
                 Sort.by(Sort.Direction.DESC, "editedAt")
         );
 
+        assert currentUser != null;
         Page<Snippet> snippetPage = snippetService.getSnippetsByPosterId(currentUser.getId(), page);
         List<SnippetResponse> content = snippetPage.getContent().stream()
                 .map(SnippetResponse::from)
@@ -104,6 +108,7 @@ public class SnippetsApi {
         if (userOrError.hasError()) return userOrError.errorResponse;
         User currentUser = userOrError.user;
 
+        assert currentUser != null;
         Optional<Snippet> s = snippetService.retrieveSnippetForUser(snippetId, currentUser.getId());
 
         return s.<ResponseEntity<?>>map(snippet -> ResponseEntity.ok(SnippetResponse.from(snippet)))
@@ -150,6 +155,7 @@ public class SnippetsApi {
                     .body(ApiError.of(ErrorCodes.VALIDATION_ERROR, "Snippet contents cannot be empty", request.getRequestURI()));
         }
 
+        assert currentUser != null;
         if (!snippetService.userOwnsSnippet(snippetId, currentUser.getId())) {
             return ResponseEntity
                     .status(HttpStatus.FORBIDDEN)
@@ -173,6 +179,7 @@ public class SnippetsApi {
             return userOrError.errorResponse;
         }
         User currentUser = userOrError.user;
+        assert currentUser != null;
         if (!snippetService.userOwnsSnippet(snippetId, currentUser.getId())) {
             return ResponseEntity
                     .status(HttpStatus.FORBIDDEN)

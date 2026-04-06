@@ -3,6 +3,7 @@ package com.norrisjackson.jsnippets.controllers.rest;
 import com.norrisjackson.jsnippets.controllers.rest.dto.ApiError;
 import com.norrisjackson.jsnippets.controllers.rest.dto.ErrorCodes;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -84,6 +85,24 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiError.of(
                         ErrorCodes.MISSING_REQUIRED_FIELD,
+                        message,
+                        request.getRequestURI()
+                ));
+    }
+
+    /**
+     * Handle constraint violations from @Validated + @Min/@Max etc. on request parameters
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiError> handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest request) {
+        String message = ex.getConstraintViolations().stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .collect(Collectors.joining("; "));
+        log.debug("Constraint violation for request to {}: {}", request.getRequestURI(), message);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiError.of(
+                        ErrorCodes.VALIDATION_ERROR,
                         message,
                         request.getRequestURI()
                 ));

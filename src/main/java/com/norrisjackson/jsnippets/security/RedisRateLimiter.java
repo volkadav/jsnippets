@@ -60,7 +60,6 @@ public class RedisRateLimiter implements RateLimiter {
                 return true; // Fail open - allow request if Redis fails
             }
 
-
             boolean allowed = count <= maxRequests;
 
             if (!allowed) {

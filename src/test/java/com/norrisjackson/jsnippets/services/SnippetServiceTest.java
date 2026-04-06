@@ -13,6 +13,7 @@ import org.springframework.data.domain.*;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -152,7 +153,7 @@ class SnippetServiceTest {
     @Test
     void getSnippetsByPosterId_ReturnsUserSnippets() {
         // Given
-        List<Snippet> userSnippets = Arrays.asList(testSnippet);
+        List<Snippet> userSnippets = Collections.singletonList(testSnippet);
         when(snippetRepository.findByPosterId(1L)).thenReturn(userSnippets);
 
         // When
@@ -181,7 +182,7 @@ class SnippetServiceTest {
     void getSnippetsByPosterId_WithSort_ReturnsSortedUserSnippets() {
         // Given
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
-        List<Snippet> userSnippets = Arrays.asList(testSnippet);
+        List<Snippet> userSnippets = Collections.singletonList(testSnippet);
         when(snippetRepository.findByPosterId(1L, sort)).thenReturn(userSnippets);
 
         // When
@@ -197,7 +198,7 @@ class SnippetServiceTest {
     void getSnippetsByPosterId_WithPageable_ReturnsPagedUserSnippets() {
         // Given
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-        List<Snippet> userSnippets = Arrays.asList(testSnippet);
+        List<Snippet> userSnippets = Collections.singletonList(testSnippet);
         Page<Snippet> page = new PageImpl<>(userSnippets, pageable, 1);
         when(snippetRepository.findByPosterId(1L, pageable)).thenReturn(page);
 

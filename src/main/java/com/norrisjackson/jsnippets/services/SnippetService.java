@@ -248,8 +248,10 @@ public class SnippetService {
      * @param pageable pagination parameters
      * @return page of timeline snippets filtered by the specified user
      */
-    public Page<Snippet> getTimelineSnippetsFilteredByUser(Long userId, List<Long> followedUserIds,
-                                                            Long filterUserId, Pageable pageable) {
+    public Page<Snippet> getTimelineSnippetsFilteredByUser(Long userId,
+                                                           List<Long> followedUserIds,
+                                                           Long filterUserId,
+                                                           Pageable pageable) {
         if (userId == null || userId <= 0) {
             log.warn("Invalid userId provided for timeline filter: {}", userId);
             return Page.empty();

@@ -8,6 +8,7 @@ import com.norrisjackson.jsnippets.services.SnippetService;
 import com.norrisjackson.jsnippets.services.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -57,11 +58,14 @@ public class Snippets {
         User currentUser = (User) model.getAttribute("currentUser");
         model.addAttribute("authUser", currentUser);
         User viewUser = currentUser;
-        if (username != null && !username.equals(currentUser.getUsername())) {
-            viewUser = userService.getUserByUsername(username).orElse(null);
-            if (viewUser == null) {
-                log.warn("User not found: {}", username);
-                return "redirect:/snippets/" + currentUser.getUsername();
+        if (username != null) {
+            assert currentUser != null;
+            if (!username.equals(currentUser.getUsername())) {
+                viewUser = userService.getUserByUsername(username).orElse(null);
+                if (viewUser == null) {
+                    log.warn("User not found: {}", username);
+                    return "redirect:/snippets/" + currentUser.getUsername();
+                }
             }
         }
         model.addAttribute("viewUser", viewUser);
@@ -85,6 +89,7 @@ public class Snippets {
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
 
         // Get paginated snippets
+        assert viewUser != null;
         Page<Snippet> snippetPage = snippetService.getSnippetsByPosterId(viewUser.getId(), pageable);
         long snippetCount = snippetPage.getTotalElements();
         log.info("Found {} snippets for user {} (page {} of {})",
@@ -120,6 +125,7 @@ public class Snippets {
         User currentUser = (User) model.getAttribute("currentUser");
 
         // Get list of followed users for filtering dropdown and query
+        assert currentUser != null;
         List<User> followedUsers = userService.getFollowedUsers(currentUser.getId());
         List<Long> followedUserIds = followedUsers.stream().map(User::getId).toList();
 
@@ -191,12 +197,11 @@ public class Snippets {
     /**
      * Display the form for creating a new snippet.
      *
-     * @param model the Spring MVC model
      * @return the new snippet form view name
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/snippets/new")
-    String newSnippet(Model model) {
+    String newSnippet() {
         return "snippet/new";
     }
 
@@ -217,7 +222,7 @@ public class Snippets {
                             RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             String errorMessage = bindingResult.getFieldErrors().stream()
-                    .map(error -> error.getDefaultMessage())
+                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
                     .findFirst()
                     .orElse("Please correct the errors in the form.");
             redirectAttributes.addFlashAttribute("error", errorMessage);
@@ -249,6 +254,7 @@ public class Snippets {
         model.addAttribute("snippet", snippet);
 
         User currentUser = (User) model.getAttribute("currentUser");
+        assert currentUser != null;
         model.addAttribute("isOwner",
                 snippetService.userOwnsSnippet(snippet.getId(),
                 currentUser.getId()));
@@ -273,6 +279,7 @@ public class Snippets {
         }
 
         User currentUser = (User) model.getAttribute("currentUser");
+        assert currentUser != null;
         if (!snippetService.userOwnsSnippet(id, currentUser.getId())) {
             log.warn("User {} attempted to edit snippet {} they do not own", currentUser.getUsername(), id);
             return "redirect:/snippets";
@@ -300,13 +307,14 @@ public class Snippets {
                              Model model,
                              RedirectAttributes redirectAttributes) {
         User currentUser = (User) model.getAttribute("currentUser");
+        assert currentUser != null;
         if (!snippetService.userOwnsSnippet(id, currentUser.getId())) {
             log.warn("User {} attempted to edit snippet {} they do not own", currentUser.getUsername(), id);
             return "redirect:/snippets";
         }
         if (bindingResult.hasErrors()) {
             String errorMessage = bindingResult.getFieldErrors().stream()
-                    .map(error -> error.getDefaultMessage())
+                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
                     .findFirst()
                     .orElse("Please correct the errors in the form.");
             redirectAttributes.addFlashAttribute("error", errorMessage);
@@ -336,6 +344,7 @@ public class Snippets {
             return "redirect:/snippets";
         }
 
+        assert currentUser != null;
         if (!snippet.getPoster().getId().equals(currentUser.getId())) {
             log.warn("User {} attempted to delete snippet {} they do not own", currentUser.getUsername(), id);
             return "redirect:/snippets";

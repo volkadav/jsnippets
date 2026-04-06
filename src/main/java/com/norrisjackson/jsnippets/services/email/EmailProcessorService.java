@@ -35,7 +35,6 @@ public class EmailProcessorService {
     public EmailProcessorService(UserRepository userRepository,
                                  SnippetService snippetService,
                                  ProcessedEmailRepository processedEmailRepository,
-                                 EmailIngestConfig config,
                                  PlatformTransactionManager txManager) {
         this.userRepository = userRepository;
         this.snippetService = snippetService;
@@ -148,7 +147,7 @@ public class EmailProcessorService {
      * Extract plain text body from message, handling multipart messages.
      * Truncates to MAX_BODY_LENGTH to prevent excessive memory usage.
      */
-    private String extractTextBody(Message message) throws Exception {
+    private String extractTextBody(Message message) {
         try {
             // Check if message has any content
             Object content = message.getContent();

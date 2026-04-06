@@ -39,9 +39,6 @@ class EmailProcessorServiceTest {
     private ProcessedEmailRepository processedEmailRepository;
 
     @Mock
-    private EmailIngestConfig config;
-
-    @Mock
     private PlatformTransactionManager txManager;
 
     private EmailProcessorService emailProcessorService;
@@ -58,7 +55,7 @@ class EmailProcessorServiceTest {
         lenient().doNothing().when(txManager).rollback(any());
 
         emailProcessorService = new EmailProcessorService(
-                userRepository, snippetService, processedEmailRepository, config, txManager);
+                userRepository, snippetService, processedEmailRepository, txManager);
         mailSession = Session.getInstance(new Properties());
     }
 
