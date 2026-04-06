@@ -4,6 +4,9 @@
   | \__ \ | | | | |_) | |_) |  __/ |_\__ \
  _/ |___/_| |_|_| .__/| .__/ \___|\__|___/
 |__/            |_|   |_|
+https://github.com/volkadav/jsnippets
+
+License: Apache License, Version 2.0 - http://www.apache.org/licenses/LICENSE-2.0
 
 Author(s):
     * Mike Jackson <michael.o.jackson@gmail.com>
