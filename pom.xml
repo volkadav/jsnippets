@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.8</version>
+        <version>3.5.13</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.norrisjackson</groupId>
@@ -20,6 +20,9 @@
         <postgresql.version>42.7.8</postgresql.version>
         <liquibase.version>4.33.0</liquibase.version>
         <bootstrap.version>5.3.8</bootstrap.version>
+        <!-- CVE-2025-48924: commons-lang3 ClassUtils.getClass StackOverflowError on long inputs.
+             Spring Boot 3.5.13 still manages 3.17.0; override until its BOM is updated. -->
+        <commons-lang3.version>3.18.0</commons-lang3.version>
     </properties>
 
     <scm>

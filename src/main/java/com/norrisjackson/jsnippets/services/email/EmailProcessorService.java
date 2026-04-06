@@ -1,6 +1,5 @@
 package com.norrisjackson.jsnippets.services.email;
 
-import com.norrisjackson.jsnippets.configs.EmailIngestConfig;
 import com.norrisjackson.jsnippets.data.*;
 import com.norrisjackson.jsnippets.services.SnippetService;
 import jakarta.mail.*;
