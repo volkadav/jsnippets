@@ -1,5 +1,6 @@
 package com.norrisjackson.jsnippets.controllers;
 
+import com.norrisjackson.jsnippets.configs.PaginationConfig;
 import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.SnippetService;
@@ -24,10 +25,12 @@ import java.util.Optional;
 public class Index {
     private final UserService userService;
     private final SnippetService snippetService;
+    private final PaginationConfig paginationConfig;
 
-    public Index(UserService userService, SnippetService snippetService) {
+    public Index(UserService userService, SnippetService snippetService, PaginationConfig paginationConfig) {
         this.userService = userService;
         this.snippetService = snippetService;
+        this.paginationConfig = paginationConfig;
     }
 
     /**
@@ -64,11 +67,11 @@ public class Index {
                     snippetService.getSnippetCountByPosterId(user.getId()));
 
             if (page == null || page < 0) page = 0;
-            if (size == null || size <= 0) size = 25;
+            int effectiveSize = paginationConfig.getEffectivePageSize(size);
             model.addAttribute("currentPage", page);
-            model.addAttribute("pageSize", size);
+            model.addAttribute("pageSize", effectiveSize);
 
-            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "editedAt"));
+            Pageable pageable = PageRequest.of(page, effectiveSize, Sort.by(Sort.Direction.DESC, "editedAt"));
             List<Snippet> recentSnippets = snippetService.getSnippetsByPosterId(user.getId(), pageable).getContent();
             model.addAttribute("recentSnippets", recentSnippets);
         }

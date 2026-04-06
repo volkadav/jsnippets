@@ -12,6 +12,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import java.time.Instant;
 import java.util.Date; // Still needed for jakarta.mail API
@@ -38,14 +41,24 @@ class EmailProcessorServiceTest {
     @Mock
     private EmailIngestConfig config;
 
+    @Mock
+    private PlatformTransactionManager txManager;
+
     private EmailProcessorService emailProcessorService;
 
     private Session mailSession;
 
     @BeforeEach
     void setUp() {
+        // Use lenient stubs: some tests (e.g. duplicate-skip) don't reach recordProcessedEmail
+        // at all, so getTransaction/commit/rollback are not invoked in every test.
+        lenient().when(txManager.getTransaction(any(TransactionDefinition.class)))
+                .thenReturn(new SimpleTransactionStatus());
+        lenient().doNothing().when(txManager).commit(any());
+        lenient().doNothing().when(txManager).rollback(any());
+
         emailProcessorService = new EmailProcessorService(
-                userRepository, snippetService, processedEmailRepository, config);
+                userRepository, snippetService, processedEmailRepository, config, txManager);
         mailSession = Session.getInstance(new Properties());
     }
 

@@ -80,31 +80,33 @@ public class MemoryHealthIndicator implements HealthIndicator {
         Map<String, Object> system = new LinkedHashMap<>();
 
         try {
-            com.sun.management.OperatingSystemMXBean osBean =
-                (com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+            java.lang.management.OperatingSystemMXBean osMxBean = ManagementFactory.getOperatingSystemMXBean();
 
-            long totalPhysical = osBean.getTotalMemorySize();
-            long freePhysical = osBean.getFreeMemorySize();
-            long usedPhysical = totalPhysical - freePhysical;
+            if (osMxBean instanceof com.sun.management.OperatingSystemMXBean osBean) {
+                long totalPhysical = osBean.getTotalMemorySize();
+                long freePhysical = osBean.getFreeMemorySize();
+                long usedPhysical = totalPhysical - freePhysical;
 
-            system.put("totalPhysical", formatMB(totalPhysical));
-            system.put("freePhysical", formatMB(freePhysical));
-            system.put("usedPhysical", formatMB(usedPhysical));
+                system.put("totalPhysical", formatMB(totalPhysical));
+                system.put("freePhysical", formatMB(freePhysical));
+                system.put("usedPhysical", formatMB(usedPhysical));
 
-            if (totalPhysical > 0) {
-                system.put("usedPercent", formatPercent((double) usedPhysical / totalPhysical));
+                if (totalPhysical > 0) {
+                    system.put("usedPercent", formatPercent((double) usedPhysical / totalPhysical));
+                }
+
+                // Swap memory
+                long totalSwap = osBean.getTotalSwapSpaceSize();
+                long freeSwap = osBean.getFreeSwapSpaceSize();
+                if (totalSwap > 0) {
+                    system.put("totalSwap", formatMB(totalSwap));
+                    system.put("freeSwap", formatMB(freeSwap));
+                }
+            } else {
+                system.put("note", "System memory info not available on this JVM");
             }
-
-            // Swap memory
-            long totalSwap = osBean.getTotalSwapSpaceSize();
-            long freeSwap = osBean.getFreeSwapSpaceSize();
-            if (totalSwap > 0) {
-                system.put("totalSwap", formatMB(totalSwap));
-                system.put("freeSwap", formatMB(freeSwap));
-            }
-        } catch (ClassCastException e) {
-            // Not running on a JVM that supports com.sun.management.OperatingSystemMXBean
-            system.put("note", "System memory info not available on this JVM");
+        } catch (Exception e) {
+            system.put("note", "System memory info not available: " + e.getMessage());
         }
 
         return system;

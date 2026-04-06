@@ -129,8 +129,8 @@ class JsnippetsApplicationTests {
 
 		// Create a new snippet
 		HttpHeaders createHeaders = createHeadersWithJwt(aliceToken);
-		createHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-		HttpEntity<String> createReq = new HttpEntity<>("contents=New snippet for Alice", createHeaders);
+		createHeaders.setContentType(MediaType.APPLICATION_JSON);
+		HttpEntity<String> createReq = new HttpEntity<>("{\"contents\":\"New snippet for Alice\"}", createHeaders);
 		ResponseEntity<Snippet> createResp = restTemplate.postForEntity(SNIPPETS_PATH, createReq, Snippet.class);
 		assertEquals(HttpStatus.CREATED, createResp.getStatusCode());
         assertNotNull(createResp.getBody());

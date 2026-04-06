@@ -6,6 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
+import java.util.Properties;
+
 /**
  * Configuration properties for the email-to-snippet ingestion feature.
  * Values are loaded from application.properties with prefix "email.ingest".
@@ -95,6 +97,35 @@ public class EmailIngestConfig {
                 && StringUtils.hasText(host)
                 && StringUtils.hasText(username)
                 && StringUtils.hasText(password);
+    }
+
+    /**
+     * Build JavaMail session properties from this configuration.
+     *
+     * @param connectionTimeoutMs connection timeout in milliseconds
+     * @param readTimeoutMs       read timeout in milliseconds
+     * @return configured Properties for a JavaMail Session
+     */
+    public Properties buildMailProperties(int connectionTimeoutMs, int readTimeoutMs) {
+        Properties props = new Properties();
+
+        props.put("mail." + protocol + ".host", host);
+        props.put("mail." + protocol + ".port", String.valueOf(port));
+
+        if (sslEnabled) {
+            props.put("mail." + protocol + ".ssl.enable", "true");
+            props.put("mail." + protocol + ".socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            props.put("mail." + protocol + ".socketFactory.fallback", "false");
+        }
+
+        if (starttlsEnabled) {
+            props.put("mail." + protocol + ".starttls.enable", "true");
+        }
+
+        props.put("mail." + protocol + ".connectiontimeout", String.valueOf(connectionTimeoutMs));
+        props.put("mail." + protocol + ".timeout", String.valueOf(readTimeoutMs));
+
+        return props;
     }
 }
 

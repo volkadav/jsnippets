@@ -14,8 +14,8 @@
     <description>snippets server</description>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <lombok.version>1.18.42</lombok.version>
         <postgresql.version>42.7.8</postgresql.version>
         <liquibase.version>4.33.0</liquibase.version>
@@ -146,6 +146,13 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>0.12.6</version>
             <scope>runtime</scope>
+        </dependency>
+
+        <!-- HTML parsing for email-to-snippet content extraction -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.22.1</version>
         </dependency>
     </dependencies>
 

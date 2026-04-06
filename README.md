@@ -191,14 +191,24 @@ Produces `jsnippets:latest` using Paketo buildpack (~400-500MB).
 
 ## run requirements
 
-- jre 17+ (tested with 17, 21, and 25; docker images use 21)
+- jre 21+ (tested with 21, and 25; docker images use 21)
 - postgresql (anything recent, say 10+)
 - mail server (optional)
 
 ## build requirements
 
-- jdk 17+ (tested with 17, 21, and 25)
+- jdk 21+ (tested with 21, and 25)
 - maven 3
+
+### side note on jdk versions
+
+Really, even 17 would probably still work, but it goes EOL later
+this year, and artifacts are more easily available for aarch64
+as x86 with 21+, so I've moved to 21 as the minimum supported version.
+If for some reason you can't use 21 or newer, you can probably
+still build with 17 by editing pom.xml to change the source and
+target versions as well as performing whichever Docker incantations
+you might need to use a 17-based image.
 
 ## documentation
 

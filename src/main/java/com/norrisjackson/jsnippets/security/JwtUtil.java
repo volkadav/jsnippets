@@ -2,12 +2,14 @@ package com.norrisjackson.jsnippets.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -28,11 +30,46 @@ import java.util.function.Function;
 @Slf4j
 public class JwtUtil {
 
-    @Value("${jwt.secret:jsnippets-super-secret-key-change-this-in-production-minimum-256-bits}")
+    private static final String DEFAULT_SECRET = "jsnippets-super-secret-key-change-this-in-production-minimum-256-bits";
+
+    @Value("${jwt.secret:" + DEFAULT_SECRET + "}")
     private String secret;
 
     @Value("${jwt.expiration:86400000}") // 24 hours in milliseconds
     private Long expiration;
+
+    @Autowired(required = false)
+    private Environment environment;
+
+    /**
+     * Validate that the JWT secret has been changed from the default in production.
+     * Throws IllegalStateException if the default secret is used with a production profile.
+     */
+    @PostConstruct
+    public void validateConfiguration() {
+        if (DEFAULT_SECRET.equals(secret)) {
+            if (isProductionProfile()) {
+                throw new IllegalStateException(
+                    "JWT secret must be changed from the default value in production! " +
+                    "Set the JWT_SECRET environment variable to a secure, random value of at least 256 bits (32 characters)."
+                );
+            }
+            log.warn("Using default JWT secret — acceptable for development but MUST be changed for production!");
+        }
+    }
+
+    private boolean isProductionProfile() {
+        if (environment == null) {
+            return false;
+        }
+        for (String profile : environment.getActiveProfiles()) {
+            String p = profile.toLowerCase();
+            if ("prod".equals(p) || "production".equals(p)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * Extract username from JWT token
@@ -94,7 +131,7 @@ public class JwtUtil {
                 .subject(subject)
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .signWith(getSigningKey(), Jwts.SIG.HS256)
                 .compact();
     }
 

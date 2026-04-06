@@ -43,12 +43,11 @@ public class CustomErrorController implements ErrorController {
         Throwable exception = errorAttributes.getError(webRequest);
 
         log.warn("ErrorController triggered for URI {}: status={}, error={}, message={}", request.getRequestURI(), status, error, message, exception);
-        log.warn("Active profile: {}", activeProfile);
 
         model.addAttribute("status", status);
         model.addAttribute("error", error);
-        if (!"production".equalsIgnoreCase(activeProfile)) {
-            log.warn("Non-production profile detected, showing detailed error message");
+        if (!isProductionProfile()) {
+            log.debug("Non-production profile detected, showing detailed error message");
             if (exception != null && exception.getMessage() != null) {
                 model.addAttribute("message", exception.getMessage());
             } else if (message != null && !message.isEmpty()) {
@@ -56,5 +55,22 @@ public class CustomErrorController implements ErrorController {
             }
         }
         return "error";
+    }
+
+    /**
+     * Check if any active profile indicates a production environment.
+     * Handles both "prod" and "production" names, and comma-separated profile lists.
+     */
+    private boolean isProductionProfile() {
+        if (activeProfile == null || activeProfile.isEmpty()) {
+            return false;
+        }
+        for (String profile : activeProfile.split(",")) {
+            String trimmed = profile.trim().toLowerCase();
+            if ("prod".equals(trimmed) || "production".equals(trimmed)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

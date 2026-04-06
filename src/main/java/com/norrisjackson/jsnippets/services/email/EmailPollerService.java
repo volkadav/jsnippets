@@ -86,44 +86,18 @@ public class EmailPollerService {
      * Connect to the mail server.
      */
     private Store connectToMailServer() throws MessagingException {
-        Properties props = buildMailProperties();
+        Properties props = config.buildMailProperties(10_000, 10_000);
         Session session = Session.getInstance(props);
         Store store = session.getStore(config.getProtocol());
         store.connect(
-                config.getHost(),
-                config.getPort(),
-                config.getUsername(),
-                config.getPassword()
+            config.getHost(),
+            config.getPort(),
+            config.getUsername(),
+            config.getPassword()
         );
         return store;
     }
 
-    /**
-     * Build mail session properties based on configuration.
-     */
-    Properties buildMailProperties() {
-        Properties props = new Properties();
-        String protocol = config.getProtocol();
-
-        props.put("mail." + protocol + ".host", config.getHost());
-        props.put("mail." + protocol + ".port", String.valueOf(config.getPort()));
-
-        if (config.isSslEnabled()) {
-            props.put("mail." + protocol + ".ssl.enable", "true");
-            props.put("mail." + protocol + ".socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-            props.put("mail." + protocol + ".socketFactory.fallback", "false");
-        }
-
-        if (config.isStarttlsEnabled()) {
-            props.put("mail." + protocol + ".starttls.enable", "true");
-        }
-
-        // Connection timeout settings
-        props.put("mail." + protocol + ".connectiontimeout", "10000");
-        props.put("mail." + protocol + ".timeout", "10000");
-
-        return props;
-    }
 
     /**
      * Close a folder quietly, optionally expunging deleted messages.
@@ -151,4 +125,3 @@ public class EmailPollerService {
         }
     }
 }
-

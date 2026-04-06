@@ -237,7 +237,7 @@ class SnippetServiceTest {
         // Then
         assertThat(result).isPresent();
         assertThat(result.get().getContents()).isEqualTo(updatedContent);
-        verify(snippetRepository, times(2)).findById(1L); // Called twice: once for ownership check, once for update
+        verify(snippetRepository).findById(1L); // Single query: ownership + fetch combined via flatMap
         verify(snippetRepository).save(any(Snippet.class));
     }
 
@@ -294,7 +294,6 @@ class SnippetServiceTest {
     @Test
     void deleteSnippet_WhenUserOwnsSnippet_ReturnsTrue() {
         // Given
-        when(snippetRepository.existsById(1L)).thenReturn(true);
         when(snippetRepository.findById(1L)).thenReturn(Optional.of(testSnippet));
 
         // When
@@ -302,15 +301,13 @@ class SnippetServiceTest {
 
         // Then
         assertThat(result).isTrue();
-        verify(snippetRepository).existsById(1L);
         verify(snippetRepository).findById(1L);
-        verify(snippetRepository).deleteById(1L);
+        verify(snippetRepository).delete(testSnippet);
     }
 
     @Test
     void deleteSnippet_WhenUserDoesNotOwnSnippet_ReturnsFalse() {
         // Given
-        when(snippetRepository.existsById(1L)).thenReturn(true);
         when(snippetRepository.findById(1L)).thenReturn(Optional.of(testSnippet));
 
         // When - anotherUser tries to delete testSnippet owned by testUser
@@ -318,24 +315,22 @@ class SnippetServiceTest {
 
         // Then
         assertThat(result).isFalse();
-        verify(snippetRepository).existsById(1L);
         verify(snippetRepository).findById(1L);
-        verify(snippetRepository, never()).deleteById(anyLong());
+        verify(snippetRepository, never()).delete(any(Snippet.class));
     }
 
     @Test
     void deleteSnippet_WhenSnippetDoesNotExist_ReturnsFalse() {
         // Given
-        when(snippetRepository.existsById(1L)).thenReturn(false);
+        when(snippetRepository.findById(1L)).thenReturn(Optional.empty());
 
         // When
         boolean result = snippetService.deleteSnippet(1L, testUser);
 
         // Then
         assertThat(result).isFalse();
-        verify(snippetRepository).existsById(1L);
-        verify(snippetRepository, never()).findById(anyLong());
-        verify(snippetRepository, never()).deleteById(anyLong());
+        verify(snippetRepository).findById(1L);
+        verify(snippetRepository, never()).delete(any(Snippet.class));
     }
 
     @Test
@@ -388,7 +383,7 @@ class SnippetServiceTest {
         // Then
         assertThat(result).isPresent();
         assertThat(result.get()).isEqualTo(testSnippet);
-        verify(snippetRepository, times(2)).findById(1L); // Called twice: once for exists check, once for ownership check
+        verify(snippetRepository).findById(1L); // Single query: findById + filter for ownership
     }
 
     @Test
@@ -401,7 +396,7 @@ class SnippetServiceTest {
 
         // Then
         assertThat(result).isEmpty();
-        verify(snippetRepository, times(2)).findById(1L); // Called twice: once for exists check, once for ownership check
+        verify(snippetRepository).findById(1L); // Single query: findById + filter for ownership
     }
 
     @Test

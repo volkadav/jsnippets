@@ -20,6 +20,15 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Security configuration with dual filter chains:
+ * - Order 1: REST API endpoints using stateless JWT authentication
+ * - Order 2: Web UI endpoints using session-based form login with CSRF
+ *
+ * This application uses a single-role model (all authenticated users have equal privileges).
+ * No RoleHierarchy bean is needed. If roles (e.g., ADMIN > USER) are introduced in the future,
+ * add a RoleHierarchy @Bean here.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity

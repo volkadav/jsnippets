@@ -165,18 +165,14 @@ public class SnippetService {
             return Optional.empty();
         }
 
-        if (!userOwnsSnippet(id, editor.getId())) {
-            log.warn("User {} attempted to update snippet {} they do not own", editor.getUsername(), id);
-            return Optional.empty();
-        }
-
-        return snippetRepository.findById(id).map(existingSnippet -> {
+        return snippetRepository.findById(id).flatMap(existingSnippet -> {
+            if (!existingSnippet.getPoster().getId().equals(editor.getId())) {
+                log.warn("User {} attempted to update snippet {} they do not own", editor.getUsername(), id);
+                return Optional.empty();
+            }
             existingSnippet.setContents(updatedSnippetContents);
-
-            Instant now = Instant.now();
-            existingSnippet.setEditedAt(now);
-
-            return snippetRepository.save(existingSnippet);
+            existingSnippet.setEditedAt(Instant.now());
+            return Optional.of(snippetRepository.save(existingSnippet));
         });
     }
 
@@ -189,8 +185,9 @@ public class SnippetService {
      */
     @Transactional
     public boolean deleteSnippet(Long id, User deleter) {
-        if (snippetRepository.existsById(id) && userOwnsSnippet(id, deleter.getId())) {
-            snippetRepository.deleteById(id);
+        Optional<Snippet> snippetOpt = snippetRepository.findById(id);
+        if (snippetOpt.isPresent() && snippetOpt.get().getPoster().getId().equals(deleter.getId())) {
+            snippetRepository.delete(snippetOpt.get());
             return true;
         }
         return false;
@@ -216,11 +213,8 @@ public class SnippetService {
      * @return Optional containing the snippet if user owns it, empty otherwise
      */
     public Optional<Snippet> retrieveSnippetForUser(Long snippetId, Long userId) {
-        Optional<Snippet> snippetOpt = snippetRepository.findById(snippetId);
-        if (snippetOpt.isPresent() && userOwnsSnippet(snippetId, userId)) {
-            return snippetOpt;
-        }
-        return Optional.empty();
+        return snippetRepository.findById(snippetId)
+                .filter(snippet -> snippet.getPoster().getId().equals(userId));
     }
 
     /**

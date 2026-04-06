@@ -231,8 +231,8 @@ class SnippetsApiIntegrationTest {
 
         mockMvc.perform(post(SNIPPETS_PATH)
                         .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("contents", newContent))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("contents", newContent))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.contents", is(newContent)))
                 .andExpect(jsonPath("$.poster.username", is(TEST_USERNAME)));
@@ -241,8 +241,8 @@ class SnippetsApiIntegrationTest {
     @Test
     void createSnippet_WithoutJwtToken_ReturnsUnauthorized() throws Exception {
         mockMvc.perform(post(SNIPPETS_PATH)
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("contents", "New snippet"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("contents", "New snippet"))))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -333,8 +333,8 @@ class SnippetsApiIntegrationTest {
         String initialContent = "JWT workflow snippet";
         MvcResult createResult = mockMvc.perform(post(SNIPPETS_PATH)
                         .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("contents", initialContent))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("contents", initialContent))))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -408,11 +408,10 @@ class SnippetsApiIntegrationTest {
     void jwtTokenInBody_DoesNotAuthenticate() throws Exception {
         String token = getJwtToken(TEST_USERNAME, TEST_PASSWORD);
 
-        // Token should be in header, not body
+        // Token should be in header, not body — send as JSON without auth header
         mockMvc.perform(post(SNIPPETS_PATH)
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("contents", "New snippet")
-                        .param("token", token)) // Wrong - token should be in header
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("contents", "New snippet", "token", token))))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -493,8 +492,8 @@ class SnippetsApiIntegrationTest {
 
         mockMvc.perform(post(SNIPPETS_PATH)
                         .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("contents", ""))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("contents", ""))))
                 .andExpect(status().isBadRequest());
     }
 
@@ -504,8 +503,8 @@ class SnippetsApiIntegrationTest {
 
         mockMvc.perform(post(SNIPPETS_PATH)
                         .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("contents", "   "))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("contents", "   "))))
                 .andExpect(status().isBadRequest());
     }
 

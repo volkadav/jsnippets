@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * In-memory rate limiter for single-instance deployments.
@@ -31,24 +31,26 @@ public class InMemoryRateLimiter implements RateLimiter {
         long currentTime = System.currentTimeMillis();
         long windowStart = currentTime - (windowSeconds * 1000L);
 
+        // Determine the result atomically inside compute to avoid TOCTOU race
+        AtomicBoolean allowed = new AtomicBoolean(true);
+
         buckets.compute(key, (k, bucket) -> {
             if (bucket == null || bucket.windowStart < windowStart) {
-                // Create new bucket or reset expired bucket
-                return new RateLimitBucket(currentTime, new AtomicInteger(1));
+                // New window — first request is always allowed (assuming maxRequests >= 1)
+                allowed.set(1 <= maxRequests);
+                return new RateLimitBucket(currentTime, 1);
             }
-            bucket.count.incrementAndGet();
-            return bucket;
+            int newCount = bucket.count + 1;
+            allowed.set(newCount <= maxRequests);
+            return new RateLimitBucket(bucket.windowStart, newCount);
         });
-
-        RateLimitBucket bucket = buckets.get(key);
-        boolean allowed = bucket.count.get() <= maxRequests;
 
         // Cleanup old buckets periodically
         if (buckets.size() > CLEANUP_THRESHOLD) {
             cleanup(windowStart);
         }
 
-        return allowed;
+        return allowed.get();
     }
 
     @Override
@@ -72,13 +74,15 @@ public class InMemoryRateLimiter implements RateLimiter {
     }
 
     /**
-     * Inner class to hold rate limit bucket data.
+     * Immutable bucket holding window start time and request count.
+     * Immutability is safe here because all mutations happen inside
+     * {@link ConcurrentHashMap#compute}, which is atomic per key.
      */
     private static class RateLimitBucket {
         final long windowStart;
-        final AtomicInteger count;
+        final int count;
 
-        RateLimitBucket(long windowStart, AtomicInteger count) {
+        RateLimitBucket(long windowStart, int count) {
             this.windowStart = windowStart;
             this.count = count;
         }

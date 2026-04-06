@@ -1,3 +1,6 @@
+-- liquibase formatted sql
+
+-- changeset jsnippets:v002-1
 -- Add timezone column to users table
 ALTER TABLE users ADD COLUMN timezone VARCHAR(50) DEFAULT 'UTC';
 

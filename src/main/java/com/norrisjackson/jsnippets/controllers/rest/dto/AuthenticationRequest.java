@@ -1,5 +1,6 @@
 package com.norrisjackson.jsnippets.controllers.rest.dto;
 
+import com.norrisjackson.jsnippets.validation.ValidationConstants;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -15,11 +16,17 @@ import lombok.NoArgsConstructor;
 public class AuthenticationRequest {
 
     @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+    @Size(min = ValidationConstants.Username.MIN_LENGTH,
+          max = ValidationConstants.Username.MAX_LENGTH,
+          message = "Username must be between " + ValidationConstants.Username.MIN_LENGTH +
+                    " and " + ValidationConstants.Username.MAX_LENGTH + " characters")
     private String username;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
+    @Size(min = ValidationConstants.Password.MIN_LENGTH,
+          max = ValidationConstants.Password.MAX_LENGTH,
+          message = "Password must be between " + ValidationConstants.Password.MIN_LENGTH +
+                    " and " + ValidationConstants.Password.MAX_LENGTH + " characters")
     private String password;
 }
 

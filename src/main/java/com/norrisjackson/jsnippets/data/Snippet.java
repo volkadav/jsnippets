@@ -11,7 +11,7 @@ import lombok.*;
 @Getter
 @Setter
 @RequiredArgsConstructor
-@ToString
+@ToString(exclude = "poster")
 public class Snippet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

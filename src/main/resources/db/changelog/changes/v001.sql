@@ -1,3 +1,6 @@
+-- liquibase formatted sql
+
+-- changeset jsnippets:v001-1
 create table users(
     id bigserial not null,
     username text not null,
@@ -13,6 +16,7 @@ create unique index idx_users_username on users(username);
 create unique index idx_users_email on users(email);
 create index idx_users_created_at on users(created_at desc);
 
+-- changeset jsnippets:v001-2
 create table snippets(
     id bigserial not null,
     contents text not null,

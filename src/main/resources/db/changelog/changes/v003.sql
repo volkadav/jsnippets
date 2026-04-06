@@ -1,3 +1,6 @@
+-- liquibase formatted sql
+
+-- changeset jsnippets:v003-1
 -- add join table for user follower/following relationships
 CREATE TABLE followers (
     follower_id BIGINT NOT NULL,

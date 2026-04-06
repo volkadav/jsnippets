@@ -6,8 +6,12 @@ import com.norrisjackson.jsnippets.services.SnippetService;
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
 import java.util.Date; // Used for jakarta.mail Message API
@@ -20,19 +24,24 @@ import java.util.Optional;
 @Slf4j
 public class EmailProcessorService {
 
+    /** Maximum text body length to process (100 KB) to prevent excessive memory usage. */
+    private static final int MAX_BODY_LENGTH = 100_000;
+
     private final UserRepository userRepository;
     private final SnippetService snippetService;
     private final ProcessedEmailRepository processedEmailRepository;
-    private final EmailIngestConfig config;
+    private final TransactionTemplate requiresNewTx;
 
     public EmailProcessorService(UserRepository userRepository,
                                  SnippetService snippetService,
                                  ProcessedEmailRepository processedEmailRepository,
-                                 EmailIngestConfig config) {
+                                 EmailIngestConfig config,
+                                 PlatformTransactionManager txManager) {
         this.userRepository = userRepository;
         this.snippetService = snippetService;
         this.processedEmailRepository = processedEmailRepository;
-        this.config = config;
+        this.requiresNewTx = new TransactionTemplate(txManager);
+        this.requiresNewTx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
     /**
@@ -137,6 +146,7 @@ public class EmailProcessorService {
 
     /**
      * Extract plain text body from message, handling multipart messages.
+     * Truncates to MAX_BODY_LENGTH to prevent excessive memory usage.
      */
     private String extractTextBody(Message message) throws Exception {
         try {
@@ -146,25 +156,32 @@ public class EmailProcessorService {
                 return null;
             }
 
+            String body = null;
             if (message.isMimeType("text/plain")) {
-                return (String) content;
+                body = (String) content;
+            } else if (message.isMimeType("multipart/*")) {
+                body = extractTextFromMultipart((Multipart) content);
+            } else if (message.isMimeType("text/html")) {
+                body = stripHtmlTags((String) content);
             }
 
-            if (message.isMimeType("multipart/*")) {
-                return extractTextFromMultipart((Multipart) content);
-            }
-
-            // For HTML-only emails, strip tags (basic approach for v1)
-            if (message.isMimeType("text/html")) {
-                return stripHtmlTags((String) content);
-            }
-
-            return null;
+            return truncateIfNeeded(body);
         } catch (Exception e) {
             // Message has no content or content cannot be read
             log.debug("Could not extract body from message: {}", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Truncate text to MAX_BODY_LENGTH if it exceeds the limit.
+     */
+    private String truncateIfNeeded(String text) {
+        if (text != null && text.length() > MAX_BODY_LENGTH) {
+            log.warn("Email body truncated from {} to {} characters", text.length(), MAX_BODY_LENGTH);
+            return text.substring(0, MAX_BODY_LENGTH);
+        }
+        return text;
     }
 
     private String extractTextFromMultipart(Multipart multipart) throws Exception {
@@ -201,20 +218,12 @@ public class EmailProcessorService {
     }
 
     /**
-     * Strip HTML tags from content.
-     * Basic implementation for v1 - consider using Jsoup for production.
+     * Extract plain text from HTML content using Jsoup.
+     * Handles all HTML entities, nested tags, and malformed HTML safely.
      */
     private String stripHtmlTags(String html) {
         if (html == null) return null;
-        return html.replaceAll("<[^>]*>", "")
-                .replaceAll("&nbsp;", " ")
-                .replaceAll("&amp;", "&")
-                .replaceAll("&lt;", "<")
-                .replaceAll("&gt;", ">")
-                .replaceAll("&quot;", "\"")
-                .replaceAll("&#39;", "'")
-                .replaceAll("\\s+", " ")
-                .trim();
+        return Jsoup.parse(html).text();
     }
 
     /**
@@ -248,6 +257,8 @@ public class EmailProcessorService {
 
     /**
      * Record a processed email in the database.
+     * Uses a REQUIRES_NEW transaction so the record is persisted even if
+     * the outer transaction (from processMessage) is rolled back.
      */
     private void recordProcessedEmail(String messageId, String senderEmail,
                                       Long snippetId, ProcessingStatus status, String errorMessage,
@@ -267,7 +278,8 @@ public class EmailProcessorService {
         record.setOriginalBody(originalBody);
 
         try {
-            processedEmailRepository.save(record);
+            requiresNewTx.executeWithoutResult(txStatus ->
+                    processedEmailRepository.save(record));
         } catch (Exception e) {
             log.error("Failed to record processed email: {}", e.getMessage());
         }

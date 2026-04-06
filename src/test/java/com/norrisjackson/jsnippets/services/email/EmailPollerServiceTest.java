@@ -24,23 +24,27 @@ class EmailPollerServiceTest {
 
     private EmailPollerService emailPollerService;
 
+    // Real instance used for buildMailProperties tests (method lives on the config now)
+    private EmailIngestConfig realConfig;
+
     @BeforeEach
     void setUp() {
         when(config.getPollIntervalMinutes()).thenReturn(10);
         emailPollerService = new EmailPollerService(config, emailProcessor);
+        realConfig = new EmailIngestConfig();
     }
 
     @Test
     void buildMailProperties_WithImapSsl_ConfiguresCorrectly() {
         // Arrange
-        when(config.getProtocol()).thenReturn("imap");
-        when(config.getHost()).thenReturn("imap.example.com");
-        when(config.getPort()).thenReturn(993);
-        when(config.isSslEnabled()).thenReturn(true);
-        when(config.isStarttlsEnabled()).thenReturn(false);
+        realConfig.setProtocol("imap");
+        realConfig.setHost("imap.example.com");
+        realConfig.setPort(993);
+        realConfig.setSslEnabled(true);
+        realConfig.setStarttlsEnabled(false);
 
         // Act
-        Properties props = emailPollerService.buildMailProperties();
+        Properties props = realConfig.buildMailProperties(10_000, 10_000);
 
         // Assert
         assertEquals("imap.example.com", props.getProperty("mail.imap.host"));
@@ -51,14 +55,14 @@ class EmailPollerServiceTest {
     @Test
     void buildMailProperties_WithPop3Starttls_ConfiguresCorrectly() {
         // Arrange
-        when(config.getProtocol()).thenReturn("pop3");
-        when(config.getHost()).thenReturn("pop.example.com");
-        when(config.getPort()).thenReturn(995);
-        when(config.isSslEnabled()).thenReturn(false);
-        when(config.isStarttlsEnabled()).thenReturn(true);
+        realConfig.setProtocol("pop3");
+        realConfig.setHost("pop.example.com");
+        realConfig.setPort(995);
+        realConfig.setSslEnabled(false);
+        realConfig.setStarttlsEnabled(true);
 
         // Act
-        Properties props = emailPollerService.buildMailProperties();
+        Properties props = realConfig.buildMailProperties(10_000, 10_000);
 
         // Assert
         assertEquals("pop.example.com", props.getProperty("mail.pop3.host"));
@@ -70,14 +74,14 @@ class EmailPollerServiceTest {
     @Test
     void buildMailProperties_IncludesTimeoutSettings() {
         // Arrange
-        when(config.getProtocol()).thenReturn("imap");
-        when(config.getHost()).thenReturn("imap.example.com");
-        when(config.getPort()).thenReturn(993);
-        when(config.isSslEnabled()).thenReturn(true);
-        when(config.isStarttlsEnabled()).thenReturn(false);
+        realConfig.setProtocol("imap");
+        realConfig.setHost("imap.example.com");
+        realConfig.setPort(993);
+        realConfig.setSslEnabled(true);
+        realConfig.setStarttlsEnabled(false);
 
         // Act
-        Properties props = emailPollerService.buildMailProperties();
+        Properties props = realConfig.buildMailProperties(10_000, 10_000);
 
         // Assert
         assertEquals("10000", props.getProperty("mail.imap.connectiontimeout"));

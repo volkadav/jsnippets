@@ -19,10 +19,10 @@ import java.util.List;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @EqualsAndHashCode.Include
     private Long id;
 
     @NotNull
+    @EqualsAndHashCode.Include
     private String username;
 
     @NotNull
@@ -67,5 +67,5 @@ public class User {
 
     @ManyToMany(mappedBy = "followedUsers")
     @JsonIgnore
-    private List<User> followers;
+    private List<User> followers = new ArrayList<>();
 }

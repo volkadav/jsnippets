@@ -1,5 +1,6 @@
 package com.norrisjackson.jsnippets.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,6 +12,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Rate limiting filter for API endpoints to prevent abuse and brute-force attacks.
@@ -28,6 +32,7 @@ import java.io.IOException;
 public class RateLimitingFilter extends OncePerRequestFilter {
 
     private final RateLimiter rateLimiter;
+    private final ObjectMapper objectMapper;
 
     // Authentication endpoint limits (stricter)
     @Value("${rate.limit.auth.requests:20}")
@@ -46,8 +51,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     @Value("${rate.limit.enabled:true}")
     private boolean rateLimitEnabled;
 
-    public RateLimitingFilter(RateLimiter rateLimiter) {
+    public RateLimitingFilter(RateLimiter rateLimiter, ObjectMapper objectMapper) {
         this.rateLimiter = rateLimiter;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -102,29 +108,29 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Send a rate limit exceeded response.
+     * Send a rate limit exceeded response with properly JSON-encoded fields.
      */
     private void sendRateLimitResponse(HttpServletResponse response, String path) throws IOException {
         response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
         response.setContentType("application/json");
-        response.setHeader("Retry-After", "60"); // Hint to client when to retry
-        response.getWriter().write(String.format(
-                "{\"code\":\"RATE_LIMIT_EXCEEDED\",\"message\":\"Too many requests. Please try again later.\",\"timestamp\":\"%s\",\"path\":\"%s\"}",
-                java.time.Instant.now().toString(),
-                path
-        ));
+        response.setHeader("Retry-After", "60");
+
+        Map<String, Object> errorBody = new LinkedHashMap<>();
+        errorBody.put("code", "RATE_LIMIT_EXCEEDED");
+        errorBody.put("message", "Too many requests. Please try again later.");
+        errorBody.put("timestamp", Instant.now().toString());
+        errorBody.put("path", path);
+
+        response.getWriter().write(objectMapper.writeValueAsString(errorBody));
     }
 
     /**
      * Get a unique identifier for the client.
-     * Uses X-Forwarded-For header if present (for reverse proxy setups), otherwise uses remote address.
+     * Uses {@code request.getRemoteAddr()} which respects the
+     * {@code server.forward-headers-strategy=NATIVE} setting for reverse proxy deployments.
+     * This avoids trusting the spoofable X-Forwarded-For header directly.
      */
     private String getClientIdentifier(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            // Take the first IP in the chain (original client)
-            return xForwardedFor.split(",")[0].trim();
-        }
         return request.getRemoteAddr();
     }
 }

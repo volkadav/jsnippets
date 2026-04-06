@@ -1,6 +1,7 @@
 package com.norrisjackson.jsnippets.controllers.rest;
 
 import com.norrisjackson.jsnippets.configs.PaginationConfig;
+import com.norrisjackson.jsnippets.controllers.dto.SnippetRequest;
 import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.controllers.rest.dto.ApiError;
@@ -13,8 +14,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -111,26 +112,20 @@ public class SnippetsApi {
                         .body(ApiError.of(ErrorCodes.SNIPPET_NOT_FOUND, "Snippet not found", request.getRequestURI())));
     }
 
-    @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create a new snippet for the authenticated user")
     public ResponseEntity<?> addSnippet(@AuthenticationPrincipal UserDetails authedUser,
-                                        @Parameter(description = "Snippet text contents") @RequestParam String contents,
-                                        HttpServletRequest request) {
-        UserOrError userOrError = getCurrentUserOrError(authedUser, request);
+                                        @Valid @RequestBody SnippetRequest request,
+                                        HttpServletRequest httpRequest) {
+        UserOrError userOrError = getCurrentUserOrError(authedUser, httpRequest);
         if (userOrError.hasError()) return userOrError.errorResponse;
         User currentUser = userOrError.user;
 
-        if (Strings.isBlank(contents)) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(ApiError.of(ErrorCodes.VALIDATION_ERROR, "Snippet contents cannot be empty", request.getRequestURI()));
-        }
-
-        Snippet newSnippet = snippetService.createSnippet(contents, currentUser);
+        Snippet newSnippet = snippetService.createSnippet(request.contents(), currentUser);
         if (newSnippet == null) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiError.of(ErrorCodes.INTERNAL_ERROR, "Failed to create snippet", request.getRequestURI()));
+                    .body(ApiError.of(ErrorCodes.INTERNAL_ERROR, "Failed to create snippet", httpRequest.getRequestURI()));
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(SnippetResponse.from(newSnippet));
     }

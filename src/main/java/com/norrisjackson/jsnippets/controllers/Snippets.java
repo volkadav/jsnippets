@@ -1,10 +1,12 @@
 package com.norrisjackson.jsnippets.controllers;
 
 import com.norrisjackson.jsnippets.configs.PaginationConfig;
+import com.norrisjackson.jsnippets.controllers.dto.SnippetRequest;
 import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.SnippetService;
 import com.norrisjackson.jsnippets.services.UserService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,11 +15,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -200,16 +203,29 @@ public class Snippets {
     /**
      * Handle new snippet form submission.
      *
-     * @param contents the snippet contents
+     * @param request  the validated snippet request DTO
+     * @param bindingResult validation result
      * @param model the Spring MVC model
+     * @param redirectAttributes for flash messages on redirect
      * @return redirect URL
      */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/snippets/new")
-    String handleNewSnippet(@RequestParam String contents, Model model) {
-        User currentUser = (User) model.getAttribute("currentUser");
+    String handleNewSnippet(@Valid SnippetRequest request,
+                            BindingResult bindingResult,
+                            Model model,
+                            RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .findFirst()
+                    .orElse("Please correct the errors in the form.");
+            redirectAttributes.addFlashAttribute("error", errorMessage);
+            return "redirect:/snippets/new";
+        }
 
-        snippetService.createSnippet(contents, currentUser);
+        User currentUser = (User) model.getAttribute("currentUser");
+        snippetService.createSnippet(request.contents(), currentUser);
 
         return "redirect:/snippets";
     }
@@ -270,24 +286,34 @@ public class Snippets {
      * Handle snippet edit form submission.
      *
      * @param id the snippet ID
-     * @param contents the updated snippet contents
+     * @param request the validated snippet request DTO
+     * @param bindingResult validation result
      * @param model the Spring MVC model
+     * @param redirectAttributes for flash messages on redirect
      * @return redirect URL
      */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/snippet/{id}/edit")
-    String handleEditSnippet(@PathVariable(name="id") Long id, @RequestParam String contents, Model model) {
+    String handleEditSnippet(@PathVariable(name="id") Long id,
+                             @Valid SnippetRequest request,
+                             BindingResult bindingResult,
+                             Model model,
+                             RedirectAttributes redirectAttributes) {
         User currentUser = (User) model.getAttribute("currentUser");
         if (!snippetService.userOwnsSnippet(id, currentUser.getId())) {
             log.warn("User {} attempted to edit snippet {} they do not own", currentUser.getUsername(), id);
             return "redirect:/snippets";
         }
-        if (!StringUtils.hasText(contents)) {
-            log.warn("Attempted to update snippet with empty contents");
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .findFirst()
+                    .orElse("Please correct the errors in the form.");
+            redirectAttributes.addFlashAttribute("error", errorMessage);
             return "redirect:/snippet/" + id + "/edit";
         }
 
-        snippetService.updateSnippet(id, contents, currentUser);
+        snippetService.updateSnippet(id, request.contents(), currentUser);
         return "redirect:/snippet/" + id;
     }
 
