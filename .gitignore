@@ -33,3 +33,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# mvn release plugin working files 
+pom.xml.releaseBackup
+release.properties
