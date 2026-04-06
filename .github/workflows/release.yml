@@ -33,7 +33,7 @@ jobs:
           distribution: "temurin"
           cache: maven
 
-      # Set Git identity + credentials
+      # set Git identity + credentials
       - name: Configure Git for Maven Release
         run: |
           git config --global user.name "github-actions[bot]"
@@ -43,36 +43,17 @@ jobs:
           git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "git@github.com:"
           git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
 
-      # Do the release
+      # do the maven release bits
       - name: Maven Release
         run: |
-          mvn -B release:prepare \
-            -DreleaseVersion=${{ github.event.inputs.releaseVersion }} \
-            -DdevelopmentVersion=${{ github.event.inputs.nextVersion }} \
-            -Dtag=${{ github.event.inputs.releaseVersion }} \
-            -DpushChanges=true
+          mvn -B release:clean release:prepare release:perform \
+          -DreleaseVersion=${{ github.event.inputs.releaseVersion }} \
+          -DdevelopmentVersion=${{ github.event.inputs.nextVersion }} \
+          -Dtag=${{ github.event.inputs.releaseVersion }} \
+          -DpushChanges=true \
+          -Darguments="-Dmaven.deploy.skip=true"
 
-          mvn -B release:perform \
-            -Darguments="-Dmaven.deploy.skip=true"
-          
-          mvn release:clean
-
-      - name: Show resulting version
-        run: cat pom.xml
-
-      # Create GitHub Release for this tag if it doesn't exist
-      - name: Create GitHub Release
-        uses: actions/create-release@v1
-        id: create_release
-        with:
-          tag_name: ${{ github.event.inputs.releaseVersion }}
-          release_name: "Release ${{ github.event.inputs.releaseVersion }}"
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Set JAR path
+      # set JAR path
       - name: Identify JAR artifact
         id: jarfile
         run: |
@@ -80,13 +61,14 @@ jobs:
           echo "JAR=$FILE" >> $GITHUB_ENV
           echo "Found JAR: $FILE"
 
-      # Upload the JAR as an asset in the release
-      - name: Upload Release Asset (JAR)
-        uses: actions/upload-release-asset@v1
+      # do the github bits to make the release and upload the JAR
+      - name: Create GitHub Release + upload JAR
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.JAR }}
-          asset_name: jsnippets-${{ github.event.inputs.releaseVersion }}.jar
-          asset_content_type: application/java-archive
+        run: |
+          gh release create "${{ github.event.inputs.releaseVersion }}" \
+            --title "Release ${{ github.event.inputs.releaseVersion }}" \
+            --notes "Automated release"
+
+          gh release upload "${{ github.event.inputs.releaseVersion }}" \
+            "$JAR"
