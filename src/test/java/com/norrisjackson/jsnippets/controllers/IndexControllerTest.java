@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import static org.hamcrest.Matchers.containsString;
 
@@ -36,6 +37,7 @@ public class IndexControllerTest {
     }
 
     @Test
+    @WithAnonymousUser
     public void getIndexAsAnonymousUser() throws Exception {
         mvc.perform(MockMvcRequestBuilders.get("/")
                 .accept(MediaType.TEXT_HTML))
