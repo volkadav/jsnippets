@@ -1,7 +1,5 @@
-# Build stage - use full JDK for building
-# This uses 21-alpine because an arm64 17-alpine does not seem to exist,
-# so this works on my local macbook dev env as well as remote CI.
-FROM eclipse-temurin:21-alpine AS builder
+# Build stage - pin the base image to an audited digest for reproducibility.
+FROM eclipse-temurin:21-jdk-alpine-3.23@sha256:4fb80de7aeb277ad949cfbe89b4f504e50bb34c57fd908c5825236473d71e986 AS builder
 
 WORKDIR /app
 
@@ -22,8 +20,8 @@ COPY src ./src
 # Build the application
 RUN ./mvnw clean package -DskipTests
 
-# Runtime stage, use JRE-only base (see note for build re: why 21)
-FROM eclipse-temurin:21-jre-alpine
+# Runtime stage, use a pinned JRE-only base.
+FROM eclipse-temurin:21-jre-alpine-3.23@sha256:704db3c40204a44f471191446ddd9cda5d60dab40f0e15c6507b815ed897238b
 
 # Build arguments for dynamic metadata
 ARG BUILD_DATE=unknown

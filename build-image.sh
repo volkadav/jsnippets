@@ -108,6 +108,7 @@ echo ""
 
 # Build the image
 ${CONTAINER_CMD} build \
+    --pull \
     ${NO_CACHE} \
     --build-arg BUILD_DATE="${BUILD_DATE}" \
     --build-arg APP_VERSION="${APP_VERSION}" \
@@ -150,4 +151,3 @@ if [[ "${CLEAN}" == "true" ]]; then
     ${CONTAINER_CMD} builder prune -f 2>/dev/null || ${CONTAINER_CMD} system prune -f --filter "until=24h"
     echo -e "${GREEN}Build cache cleaned${NC}"
 fi
-

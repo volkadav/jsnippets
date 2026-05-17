@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.13</version>
+        <version>3.5.14</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.norrisjackson</groupId>
@@ -17,7 +17,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <lombok.version>1.18.42</lombok.version>
-        <postgresql.version>42.7.8</postgresql.version>
+        <postgresql.version>42.7.11</postgresql.version>
         <liquibase.version>4.33.0</liquibase.version>
         <bootstrap.version>5.3.8</bootstrap.version>
         <!-- CVE-2025-48924: commons-lang3 ClassUtils.getClass StackOverflowError on long inputs.
@@ -190,7 +190,7 @@
                 <configuration>
                     <image>
                         <name>${project.artifactId}</name>
-                        <builder>paketobuildpacks/builder-noble-java-tiny:latest</builder>
+                        <builder>paketobuildpacks/builder-noble-java-tiny:0.0.137@sha256:c8b5f936e6d9af492af4a493b4a03eaf496fe51f206c5d53ccddab7871ed4ef5</builder>
                     </image>
                     <docker>
                         <!-- on macOS, if you're using podman, you'll want to use

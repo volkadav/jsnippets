@@ -1,7 +1,7 @@
 services:
   # PostgreSQL Database
   db:
-    image: postgres:16-alpine
+    image: postgres:16-alpine3.23@sha256:16bc17c64a573ef34162af9298258d1aec548232985b33ed7b1eac33ba35c229
     container_name: jsnippets-db
     environment:
       POSTGRES_DB: jsnippets
@@ -23,7 +23,7 @@ services:
   # Valkey (Redis-compatible) for Session Storage
   # Comment out this service if you want to use in-memory sessions instead
   session-store:
-    image: valkey/valkey:8-alpine
+    image: valkey/valkey:8.1-alpine3.23@sha256:b027235326507cfdade9b6684056ec1d0b0c0757412e628245129b5d7b788618
     container_name: jsnippets-session
     ports:
       - "${REDIS_PORT:-6379}:6379"
