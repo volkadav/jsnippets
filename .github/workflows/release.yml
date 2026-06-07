@@ -44,6 +44,13 @@ jobs:
           git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "git@github.com:"
           git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
 
+      # Clean up any leftover state from previous failed release attempts
+      - name: Clean up prior release state
+        run: |
+          mvn -B release:clean || true
+          git tag -d "${{ github.event.inputs.releaseVersion }}" 2>/dev/null || true
+          git push origin :refs/tags/"${{ github.event.inputs.releaseVersion }}" 2>/dev/null || true
+
       # do the maven release bits
       - name: Maven Release
         run: |
