@@ -59,7 +59,10 @@ public class Snippets {
         model.addAttribute("authUser", currentUser);
         User viewUser = currentUser;
         if (username != null) {
-            assert currentUser != null;
+            if (currentUser == null) {
+                log.error("No current user found in model");
+                return "redirect:/login";
+            }
             if (!username.equals(currentUser.getUsername())) {
                 viewUser = userService.getUserByUsername(username).orElse(null);
                 if (viewUser == null) {
@@ -89,7 +92,10 @@ public class Snippets {
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
 
         // Get paginated snippets
-        assert viewUser != null;
+        if (viewUser == null) {
+            log.error("View user is null, redirecting to login");
+            return "redirect:/login";
+        }
         Page<Snippet> snippetPage = snippetService.getSnippetsByPosterId(viewUser.getId(), pageable);
         long snippetCount = snippetPage.getTotalElements();
         log.info("Found {} snippets for user {} (page {} of {})",
@@ -125,7 +131,10 @@ public class Snippets {
         User currentUser = (User) model.getAttribute("currentUser");
 
         // Get list of followed users for filtering dropdown and query
-        assert currentUser != null;
+        if (currentUser == null) {
+            log.error("No current user found in model for timeline");
+            return "redirect:/login";
+        }
         List<User> followedUsers = userService.getFollowedUsers(currentUser.getId());
         List<Long> followedUserIds = followedUsers.stream().map(User::getId).toList();
 
@@ -254,7 +263,10 @@ public class Snippets {
         model.addAttribute("snippet", snippet);
 
         User currentUser = (User) model.getAttribute("currentUser");
-        assert currentUser != null;
+        if (currentUser == null) {
+            log.error("No current user found in model for snippet view");
+            return "redirect:/login";
+        }
         model.addAttribute("isOwner",
                 snippetService.userOwnsSnippet(snippet.getId(),
                 currentUser.getId()));
@@ -279,9 +291,12 @@ public class Snippets {
         }
 
         User currentUser = (User) model.getAttribute("currentUser");
-        assert currentUser != null;
+        if (currentUser == null) {
+            log.error("No current user found in model for snippet edit");
+            return "redirect:/login";
+        }
         if (!snippetService.userOwnsSnippet(id, currentUser.getId())) {
-            log.warn("User {} attempted to edit snippet {} they do not own", currentUser.getUsername(), id);
+            log.warn("User attempted to edit snippet {} they do not own", id);
             return "redirect:/snippets";
         }
 
@@ -307,7 +322,10 @@ public class Snippets {
                              Model model,
                              RedirectAttributes redirectAttributes) {
         User currentUser = (User) model.getAttribute("currentUser");
-        assert currentUser != null;
+        if (currentUser == null) {
+            log.error("No current user found in model for snippet edit");
+            return "redirect:/login";
+        }
         if (!snippetService.userOwnsSnippet(id, currentUser.getId())) {
             log.warn("User {} attempted to edit snippet {} they do not own", currentUser.getUsername(), id);
             return "redirect:/snippets";
@@ -344,7 +362,10 @@ public class Snippets {
             return "redirect:/snippets";
         }
 
-        assert currentUser != null;
+        if (currentUser == null) {
+            log.error("No current user found in model for snippet delete");
+            return "redirect:/login";
+        }
         if (!snippet.getPoster().getId().equals(currentUser.getId())) {
             log.warn("User {} attempted to delete snippet {} they do not own", currentUser.getUsername(), id);
             return "redirect:/snippets";

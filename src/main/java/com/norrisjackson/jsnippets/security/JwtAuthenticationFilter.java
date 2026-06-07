@@ -25,10 +25,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserService userService;
+    private final UserDetailsCache userDetailsCache;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserService userService) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserService userService, UserDetailsCache userDetailsCache) {
         this.jwtUtil = jwtUtil;
         this.userService = userService;
+        this.userDetailsCache = userDetailsCache;
     }
 
     @Override
@@ -52,7 +54,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Validate token and set authentication
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userService.loadUserByUsername(username);
+            UserDetails userDetails = userDetailsCache.get(username);
+            if (userDetails == null) {
+                userDetails = userService.loadUserByUsername(username);
+                userDetailsCache.put(username, userDetails);
+                log.debug("Cached UserDetails for JWT user: {}", username);
+            }
 
             if (jwtUtil.validateToken(jwt, userDetails)) {
                 UsernamePasswordAuthenticationToken authenticationToken =

@@ -34,6 +34,8 @@ class JwtAuthenticationFilterTest {
     @Mock
     private UserService userService;
 
+    private UserDetailsCache userDetailsCache;
+
     @Mock
     private HttpServletRequest request;
 
@@ -51,7 +53,8 @@ class JwtAuthenticationFilterTest {
 
     @BeforeEach
     void setUp() {
-        jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtUtil, userService);
+        userDetailsCache = new UserDetailsCache(60);
+        jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtUtil, userService, userDetailsCache);
         SecurityContextHolder.clearContext(); // Clear security context before each test
     }
 

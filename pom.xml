@@ -16,10 +16,13 @@
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <lombok.version>1.18.42</lombok.version>
+        <lombok.version>1.18.46</lombok.version>
         <postgresql.version>42.7.11</postgresql.version>
         <liquibase.version>4.33.0</liquibase.version>
         <bootstrap.version>5.3.8</bootstrap.version>
+        <jjwt.version>0.13.0</jjwt.version>
+        <jsoup.version>1.22.2</jsoup.version>
+        <caffeine.version>3.2.4</caffeine.version>
         <!-- CVE-2025-48924: commons-lang3 ClassUtils.getClass StackOverflowError on long inputs.
              Spring Boot 3.5.13 still manages 3.17.0; override until its BOM is updated. -->
         <commons-lang3.version>3.18.0</commons-lang3.version>
@@ -137,18 +140,18 @@
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
-            <version>0.12.6</version>
+            <version>${jjwt.version}</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
-            <version>0.12.6</version>
+            <version>${jjwt.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
-            <version>0.12.6</version>
+            <version>${jjwt.version}</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -156,7 +159,14 @@
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.22.1</version>
+            <version>${jsoup.version}</version>
+        </dependency>
+
+        <!-- Caffeine cache for JWT UserDetails caching -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>${caffeine.version}</version>
         </dependency>
     </dependencies>
 

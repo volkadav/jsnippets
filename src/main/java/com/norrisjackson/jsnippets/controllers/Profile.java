@@ -5,6 +5,8 @@ import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -229,14 +231,14 @@ public class Profile {
             currentUser.setEmail(request.email());
             currentUser.setTimezone(request.timezone());
 
-            // Sanitize bio - strip HTML tags and escape special characters
+            // Sanitize bio - strip HTML tags using Jsoup for robust cleaning
             if (request.bio() != null) {
-                // Remove HTML tags
-                String sanitizedBio = request.bio().replaceAll("<[^>]*>", "");
+                // Strip all HTML tags and convert entities to plain text
+                String cleaned = Jsoup.clean(request.bio(), Safelist.none());
                 // Trim whitespace
-                sanitizedBio = sanitizedBio.trim();
+                cleaned = cleaned.trim();
                 // Set to null if empty after sanitization
-                currentUser.setBio(sanitizedBio.isEmpty() ? null : sanitizedBio);
+                currentUser.setBio(cleaned.isEmpty() ? null : cleaned);
             } else {
                 currentUser.setBio(null);
             }

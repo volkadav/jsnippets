@@ -4,31 +4,24 @@ import com.norrisjackson.jsnippets.configs.PaginationConfig;
 import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.services.SnippetService;
-import com.norrisjackson.jsnippets.services.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
-import java.util.Optional;
 
 @Controller
 @Slf4j
 public class Index {
-    private final UserService userService;
     private final SnippetService snippetService;
     private final PaginationConfig paginationConfig;
 
-    public Index(UserService userService, SnippetService snippetService, PaginationConfig paginationConfig) {
-        this.userService = userService;
+    public Index(SnippetService snippetService, PaginationConfig paginationConfig) {
         this.snippetService = snippetService;
         this.paginationConfig = paginationConfig;
     }
@@ -46,25 +39,14 @@ public class Index {
     public String index(@RequestParam(required = false) Integer page,
                         @RequestParam(required = false) Integer size,
                         Model model) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Object principal = auth.getPrincipal();
-        log.info("Principal: {}", principal);
+        User currentUser = (User) model.getAttribute("currentUser");
 
-        if (principal instanceof UserDetails authedUser) {
-            Optional<User> userOpt = userService.getUserByUsername(
-                    authedUser.getUsername());
-            if (userOpt.isEmpty()) {
-                log.error("Authenticated user not found in database: {}",
-                        authedUser.getUsername());
-                return "redirect:/logout";
-            }
-            User user = userOpt.get();
-
+        if (currentUser != null) {
             model.addAttribute("greeting", "Welcome, " +
-                    user.getUsername() + "!");
-            model.addAttribute("username", user.getUsername());
+                    currentUser.getUsername() + "!");
+            model.addAttribute("username", currentUser.getUsername());
             model.addAttribute("snippetCount",
-                    snippetService.getSnippetCountByPosterId(user.getId()));
+                    snippetService.getSnippetCountByPosterId(currentUser.getId()));
 
             if (page == null || page < 0) page = 0;
             int effectiveSize = paginationConfig.getEffectivePageSize(size);
@@ -72,7 +54,7 @@ public class Index {
             model.addAttribute("pageSize", effectiveSize);
 
             Pageable pageable = PageRequest.of(page, effectiveSize, Sort.by(Sort.Direction.DESC, "editedAt"));
-            List<Snippet> recentSnippets = snippetService.getSnippetsByPosterId(user.getId(), pageable).getContent();
+            List<Snippet> recentSnippets = snippetService.getSnippetsByPosterId(currentUser.getId(), pageable).getContent();
             model.addAttribute("recentSnippets", recentSnippets);
         }
 

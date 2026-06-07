@@ -4,11 +4,10 @@ package com.norrisjackson.jsnippets.validation;
  * Validation constants for Bean Validation annotations.
  * These constants are used in @Size, @Min, @Max annotations which require compile-time constants.
  *
- * The actual runtime values can be overridden via ValidationConfig and application.properties,
- * but these constants serve as:
- * 1. Documentation of default validation rules
- * 2. Compile-time constants for Bean Validation annotations
- * 3. Centralized location for all validation magic numbers
+ * These values are the canonical defaults. ValidationConfig (backed by
+ * application.properties) starts from the same defaults and may be overridden at
+ * runtime for manual validation checks in controllers/services, but Bean Validation
+ * annotations always use these compile-time constants and cannot be changed at runtime.
  */
 public final class ValidationConstants {
 
