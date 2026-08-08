@@ -8,40 +8,71 @@
     </head>
     <body>
     <div class="container mt-4">
-        <h1 class="mb-4">jSnippets <small class="text-muted">status reporting, simplified</small></h1>
+        <div th:if="${username}" class="d-flex justify-content-end mb-3 text-muted small">
+            <span>
+                logged in as <span th:text="${username}">username</span>
+                | <a th:href="@{/profile}" class="text-decoration-none">profile settings</a>
+            </span>
+        </div>
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h1 class="mb-0">jSnippets <small class="text-muted">status reporting, simplified</small></h1>
+            <form th:action="@{/search}" method="get" class="d-flex" th:if="${username}">
+                <input type="text" name="q" class="form-control me-2" placeholder="Search users or snippets..." aria-label="Search">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
         <p th:if="${greeting}" th:text="${greeting}" class="alert alert-info"></p>
-        <p th:unless="${greeting}" class="alert alert-secondary">Welcome, guest! Please
+        <p th:unless="${username}" class="alert alert-secondary">Welcome, guest! Please
             <a th:href="@{/login}" class="btn btn-link p-0">log in</a> or
             <a th:href="@{/register}" class="btn btn-link p-0">register an account</a>.
         </p>
-        <div th:if="${username}" class="card mt-4">
-            <div class="card-body">
-                <div th:if="${recentSnippets != null and !recentSnippets.empty}" class="mt-4">
-                    <h2 class="h5 mt-3">Your Recent Snippets</h2>
-                    <ul>
-                        <li th:if="${recentSnippets == null or recentSnippets.empty}">You have no recent snippets.</li>
-                        <li th:each="snippet : ${recentSnippets}">
-                            <a th:href="@{'/snippets/' + ${snippet.id}}" th:text="${#strings.length(snippet.contents) > 30 ? #strings.substring(snippet.contents, 0, 30) + '...' : snippet.contents}">Snippet content</a>
-                            @ <span th:text="${#dates.format(snippet.editedAt, 'yyyy-MM-dd HH:mm')}">Creation/Last edit date/time</span>
-                        </li>
-                    </ul>
+        <div th:if="${username}" class="row mt-4">
+            <!-- Sidebar: actions -->
+            <div class="col-md-3 mb-4">
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <a th:href="@{/timeline}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-activity me-2" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.208A.5.5 0 0 1 12 7.5h3.5a.5.5 0 0 1 0 1h-3.15l-1.88 5.17a.5.5 0 0 1-.94 0L6 3.964 4.47 8.171A.5.5 0 0 1 4 8.5H.5a.5.5 0 0 1 0-1h3.15l1.88-5.17A.5.5 0 0 1 6 2"/></svg>
+                                View Timeline
+                            </a>
+                            <a th:href="@{/snippets/new}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle me-2" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/></svg>
+                                Create New Snippet
+                            </a>
+                            <a th:href="@{/users}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people me-2" viewBox="0 0 16 16"><path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1L7 12.996c.001-.264-.167-1.03-.76-1.72C5.688 10.629 4.625 10 3 10c-1.625 0-2.688.629-3.24 1.276-.593.69-.76 1.455-.76 1.72L-1 13.998zM7 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6M5 2.5a.5.5 0 0 1 .5-.5h1v-1a.5.5 0 0 1 1 0v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1-.5-.5M3.5 11c.478 0 .889.135 1.23.318.224.12.413.27.565.47H11a3 3 0 0 1 .893 1.508L11.997 13.4c-.088-.357-.208-.692-.36-1H4.5z"/></svg>
+                                Browse Users
+                            </a>
+                        </div>
+                        <div class="border-top p-2 text-center">
+                            <form th:action="@{/logout}" method="post">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Log out</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-                <h2 class="h5 mt-3">Actions</h2>
-                <ul class="list-group mb-3">
-                    <li class="list-group-item">
-                        <a th:href="@{/snippets/new}" class="btn btn-success mb-3">Create New Snippet</a></li>
-                    <li class="list-group-item">
-                        <a th:href="@{/snippets}" class="btn btn-primary mb-3" th:text="@{'View your snippets (' + ${snippetCount} + ')'}">View your snippets</a></li>
-                    <li class="list-group-item">
-                        <a th:href="@{/timeline}" class="btn btn-info mb-3">View Timeline</a>
-                    </li>
-                    <li class="list-group-item">
-                        <a th:href="@{/profile}" class="btn btn-primary mb-3">Profile Settings</a></li>
-                </ul>
+            </div>
 
-                <form th:action="@{/logout}" method="post">
-                    <button type="submit" class="btn btn-outline-danger">Log out</button>
-                </form>
+            <!-- Main content: recent snippets -->
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-body">
+                        <div th:if="${recentSnippets != null and !recentSnippets.empty}" class="mt-4">
+                            <h2 class="h5 mt-3">Your Recent Snippets</h2>
+                            <ul>
+                                <li th:if="${recentSnippets == null or recentSnippets.empty}">You have no recent snippets.</li>
+                                <li th:each="snippet : ${recentSnippets}">
+                                    <a th:href="@{'/snippets/' + ${snippet.id}}" th:text="${#strings.length(snippet.contents) > 30 ? #strings.substring(snippet.contents, 0, 30) + '...' : snippet.contents}">Snippet content</a>
+                                    @ <span th:text="${timezoneService.formatDateInUserTimezone(snippet.editedAt, currentUser.timezone)}">Creation/Last edit date/time</span>
+                                </li>
+                                <li th:if="${snippetCount > pageSize}">
+                                    <a th:href="@{/snippets}" th:text="'see more (' + ${snippetCount} + ')'">see more</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

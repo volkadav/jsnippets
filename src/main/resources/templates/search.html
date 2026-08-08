@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Snippets - JSnippets</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.8/css/bootstrap.min.css}" />
+    <script th:src="@{/webjars/bootstrap/5.3.8/js/bootstrap.bundle.min.js}"></script>
+</head>
+<body>
+<div class="container mt-4">
+    <h1 class="mb-4">Search</h1>
+
+    <form th:action="@{/search}" method="get" class="row g-2 mb-4">
+        <div class="col-auto flex-grow-1">
+            <input type="text" name="q" class="form-control"
+                   placeholder="Search users or snippet contents..."
+                   th:value="${query}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </form>
+
+    <div th:if="${query == null or query.isEmpty()}" class="alert alert-info">
+        Enter a term above to search users and snippets across all users.
+    </div>
+
+    <!-- Users -->
+    <div th:if="${query != null and !query.isEmpty()}">
+        <h2 class="h5 mt-4">Users</h2>
+        <ul class="list-group" th:if="${!#lists.isEmpty(users)}">
+            <li class="list-group-item d-flex align-items-center" th:each="user : ${users}">
+                <img th:src="@{'/user/' + ${user.username} + '/icon'}"
+                     alt="User icon"
+                     class="rounded-circle me-3"
+                     style="width: 40px; height: 40px; object-fit: cover;">
+                <div class="flex-grow-1">
+                    <a th:href="@{'/profile/' + ${user.username}}"
+                       class="fw-bold text-decoration-none"
+                       th:text="${user.username}">username</a>
+                    <small class="text-muted ms-2" th:if="${user.bio != null and !#strings.isEmpty(user.bio)}"
+                           th:text="${#strings.length(user.bio) > 80 ? #strings.substring(user.bio, 0, 80) + '...' : user.bio}">bio</small>
+                </div>
+                <a th:href="@{'/profile/' + ${user.username}}"
+                   class="btn btn-sm btn-outline-primary">View Profile</a>
+            </li>
+        </ul>
+        <div th:if="${#lists.isEmpty(users)}" class="text-muted">
+            No users match "<span th:text="${query}"></span>".
+        </div>
+    </div>
+
+    <!-- Snippets -->
+    <div th:if="${query != null and !query.isEmpty()}">
+        <h2 class="h5 mt-4">Snippets</h2>
+        <ul class="list-group" th:if="${!#lists.isEmpty(snippets)}">
+            <li class="list-group-item" th:each="snippet : ${snippets}">
+                <div class="d-flex align-items-start">
+                    <a th:href="@{'/profile/' + ${snippet.poster.username}}" class="me-3">
+                        <img th:src="@{'/user/' + ${snippet.poster.username} + '/icon'}"
+                             alt="User icon"
+                             class="rounded-circle"
+                             style="width: 40px; height: 40px; object-fit: cover;">
+                    </a>
+                    <div class="flex-grow-1">
+                        <p class="mb-1">
+                            <a th:href="@{'/snippet/' + ${snippet.id}}"
+                               th:text="${#strings.length(snippet.contents) > 200 ? #strings.substring(snippet.contents, 0, 200) + '...' : snippet.contents}">Snippet content</a>
+                        </p>
+                        <small class="text-muted">
+                            by <a th:href="@{'/profile/' + ${snippet.poster.username}}"
+                                  th:text="${snippet.poster.username}">user</a>
+                            &middot;
+                            <span th:text="${timezoneService.formatDateInUserTimezone(snippet.editedAt, currentUser.timezone)}">date</span>
+                        </small>
+                    </div>
+                </div>
+            </li>
+        </ul>
+        <div th:if="${#lists.isEmpty(snippets)}" class="text-muted">
+            No snippets match "<span th:text="${query}"></span>".
+        </div>
+    </div>
+
+    <!-- Pagination Controls -->
+    <nav th:if="${totalPages > 1}" aria-label="Search pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/search(q=${query}, page=0, size=${pageSize})}" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/search(q=${query}, page=${currentPage - 1}, size=${pageSize})}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            <th:block th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}">
+                <li class="page-item"
+                    th:if="${pageNum < 2 or pageNum >= totalPages - 2 or (pageNum >= currentPage - 2 and pageNum <= currentPage + 2)}"
+                    th:classappend="${pageNum == currentPage} ? 'active'">
+                    <a class="page-link" th:href="@{/search(q=${query}, page=${pageNum}, size=${pageSize})}"
+                       th:text="${pageNum + 1}">1</a>
+                </li>
+                <li class="page-item disabled"
+                    th:if="${(pageNum == 2 and currentPage > 4) or (pageNum == totalPages - 3 and currentPage < totalPages - 5)}">
+                    <span class="page-link">...</span>
+                </li>
+            </th:block>
+            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{/search(q=${query}, page=${currentPage + 1}, size=${pageSize})}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{/search(q=${query}, page=${totalPages - 1}, size=${pageSize})}" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="text-center text-muted mt-2">
+            <small>Showing <span th:text="${#lists.size(snippets)}">0</span> of
+                <span th:text="${snippetCount}">0</span> snippets
+                (Page <span th:text="${currentPage + 1}">1</span> of <span th:text="${totalPages}">1</span>)</small>
+        </div>
+    </nav>
+
+    <br/>
+    <a th:href="@{'/'}" class="btn btn-primary mb-3">Home</a>
+</div>
+</body>
+</html>

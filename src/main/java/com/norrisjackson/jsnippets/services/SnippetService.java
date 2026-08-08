@@ -84,12 +84,13 @@ public class SnippetService {
 
     /**
      * Get all snippets with pagination.
+     * Uses a fetch join on the poster to avoid N+1 queries when rendering.
      *
      * @param pageable pagination parameters
      * @return page of snippets
      */
     public Page<Snippet> getAllSnippets(Pageable pageable) {
-        return snippetRepository.findAll(pageable);
+        return snippetRepository.findAllSnippets(pageable);
     }
 
     /**
@@ -191,6 +192,38 @@ public class SnippetService {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Search snippets across all users by content substring, with pagination.
+     * Search terms are treated literally: LIKE wildcards are escaped so users
+     * can search for "%" or "_" without them matching everything.
+     *
+     * @param query    the search term (trimmed by the caller; null/blank handled here)
+     * @param pageable pagination information
+     * @return page of matching snippets
+     */
+    public Page<Snippet> searchSnippets(String query, Pageable pageable) {
+        if (query == null || query.isBlank()) {
+            return Page.empty(pageable);
+        }
+        String escaped = query.trim()
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_")
+                .toLowerCase();
+        return snippetRepository.searchByContents("%" + escaped + "%", pageable);
+    }
+
+    /**
+     * Get a page of all snippets across every user (timeline "all users" mode).
+     * Alias for {@link #getAllSnippets(Pageable)}; kept for clarity in the controller.
+     *
+     * @param pageable pagination information
+     * @return page of all snippets
+     */
+    public Page<Snippet> getAllSnippetsPage(Pageable pageable) {
+        return getAllSnippets(pageable);
     }
 
     /**

@@ -44,8 +44,7 @@ public class User {
     @Column(name = "timezone")
     private String timezone = "UTC"; // Default to UTC, stores IANA timezone identifier
 
-    @Lob
-    @Column(name = "bio")
+    @Column(name = "bio", columnDefinition = "text")
     private String bio; // Optional free-form bio text, max 4000 characters
 
     @Column(name = "icon", columnDefinition = "bytea")
@@ -55,6 +54,14 @@ public class User {
     @Column(name = "icon_content_type", length = 50)
     @JsonIgnore
     private String iconContentType; // MIME type of the icon (e.g., "image/png")
+
+    @Column(name = "icon_thumbnail", columnDefinition = "bytea")
+    @JsonIgnore
+    private byte[] iconThumbnail; // Pre-generated thumbnail (32x32 PNG), built at upload time
+
+    @Column(name = "icon_thumbnail_content_type", length = 50)
+    @JsonIgnore
+    private String iconThumbnailContentType; // MIME type of the thumbnail (always "image/png")
 
     @ManyToMany
     @JoinTable(

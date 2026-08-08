@@ -3,6 +3,8 @@ package com.norrisjackson.jsnippets.services;
 import com.norrisjackson.jsnippets.data.User;
 import com.norrisjackson.jsnippets.data.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -10,7 +12,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -220,6 +224,70 @@ public class UserService implements UserDetailsService {
             return List.of();
         }
         return userRepository.findFollowedUsersByUserId(userId);
+    }
+
+    /**
+     * Search users by username or bio substring, with pagination.
+     * Search terms are treated literally (LIKE wildcards escaped).
+     *
+     * @param query    the search term (null/blank returns an empty page)
+     * @param pageable pagination information
+     * @return page of matching users
+     */
+    public Page<User> searchUsers(String query, Pageable pageable) {
+        if (query == null || query.isBlank()) {
+            return Page.empty(pageable);
+        }
+        String escaped = query.trim()
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_")
+                .toLowerCase();
+        return userRepository.searchUsers("%" + escaped + "%", pageable);
+    }
+
+    /**
+     * Get a page of all users (user directory), with pagination.
+     *
+     * @param pageable pagination information
+     * @return page of users
+     */
+    public Page<User> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
+
+    /**
+     * Build a follower-count map for a batch of user IDs in one query.
+     *
+     * @param userIds user IDs to count for (must not be empty)
+     * @return map of userId -> follower count
+     */
+    public Map<Long, Long> getFollowerCounts(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, Long> counts = new HashMap<>();
+        for (Object[] row : userRepository.countFollowersBatch(userIds)) {
+            counts.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+        }
+        return counts;
+    }
+
+    /**
+     * Build a following-count map for a batch of user IDs in one query.
+     *
+     * @param userIds user IDs to count for (must not be empty)
+     * @return map of userId -> following count
+     */
+    public Map<Long, Long> getFollowingCounts(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, Long> counts = new HashMap<>();
+        for (Object[] row : userRepository.countFollowingBatch(userIds)) {
+            counts.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+        }
+        return counts;
     }
 
     @Override

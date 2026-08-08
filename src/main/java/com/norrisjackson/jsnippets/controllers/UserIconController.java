@@ -74,11 +74,16 @@ public class UserIconController {
             // User has a custom icon
             if (size == iconConfig.getFullSize()) {
                 imageData = user.getIcon();
+                contentType = user.getIconContentType();
+            } else if (user.getIconThumbnail() != null) {
+                // Thumbnail is pre-generated at upload time - serve it as-is
+                imageData = user.getIconThumbnail();
+                contentType = "image/png";
             } else {
-                // Resize for thumbnail
+                // Fallback for users who had an icon before thumbnails were stored
                 imageData = identiconService.resizeImage(user.getIcon(), size, size);
+                contentType = "image/png";
             }
-            contentType = size == iconConfig.getFullSize() ? user.getIconContentType() : "image/png";
         } else {
             // Generate identicon from email
             imageData = identiconService.generateIdenticon(user.getEmail(), size);
@@ -132,6 +137,10 @@ public class UserIconController {
             byte[] iconData = file.getBytes();
             currentUser.setIcon(iconData);
             currentUser.setIconContentType(contentType);
+            // Pre-generate the thumbnail once at upload time so listing pages
+            // can serve it directly instead of resizing on every request.
+            currentUser.setIconThumbnail(identiconService.resizeImage(iconData, iconConfig.getThumbnailSize(), iconConfig.getThumbnailSize()));
+            currentUser.setIconThumbnailContentType("image/png");
             userService.updateUser(currentUser);
 
             log.info("Icon uploaded for user: {}", currentUser.getUsername());
@@ -161,6 +170,8 @@ public class UserIconController {
 
         currentUser.setIcon(null);
         currentUser.setIconContentType(null);
+        currentUser.setIconThumbnail(null);
+        currentUser.setIconThumbnailContentType(null);
         userService.updateUser(currentUser);
 
         log.info("Icon removed for user: {}", currentUser.getUsername());

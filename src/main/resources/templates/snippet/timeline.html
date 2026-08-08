@@ -13,47 +13,65 @@
         <span class="text-muted fs-6">(<span th:text="${snippetCount}">0</span> snippets)</span>
         <span class="ms-2">
             <a th:if="${sortDir == 'asc'}"
-               th:href="@{/timeline(page=${currentPage}, size=${pageSize}, sort='desc', user=${filterUser?.username})}"
+               th:href="@{/timeline(scope=${scope}, page=${currentPage}, size=${pageSize}, sort='desc', user=${filterUser?.username})}"
                class="text-decoration-none" title="Sort by create/edit time descending">&#x25BC;</a>
             <a th:if="${sortDir == 'desc'}"
-               th:href="@{/timeline(page=${currentPage}, size=${pageSize}, sort='asc', user=${filterUser?.username})}"
+               th:href="@{/timeline(scope=${scope}, page=${currentPage}, size=${pageSize}, sort='asc', user=${filterUser?.username})}"
                class="text-decoration-none" title="Sort by create/edit time ascending">&#x25B2;</a>
             <a th:if="${sortDir == null or (sortDir != 'asc' and sortDir != 'desc')}"
-               th:href="@{/timeline(page=${currentPage}, size=${pageSize}, sort='desc', user=${filterUser?.username})}"
+               th:href="@{/timeline(scope=${scope}, page=${currentPage}, size=${pageSize}, sort='desc', user=${filterUser?.username})}"
                class="text-decoration-none" title="Sort by create/edit time descending">&#x25BC;</a>
         </span>
     </h1>
 
     <p class="mb-3 text-secondary">
-        Snippets from you and
-        <span th:if="${followingCount > 0}" th:text="${followingCount + ' user' + (followingCount > 1 ? 's' : '') + ' you follow'}">users you follow</span>
-        <span th:if="${followingCount == 0}">no one (you're not following anyone yet)</span>
+        <span th:if="${scope == 'all'}">Snippets from every user.</span>
+        <span th:if="${scope == 'following'}">
+            Snippets from you and
+            <span th:if="${followingCount > 0}" th:text="${followingCount + ' user' + (followingCount > 1 ? 's' : '') + ' you follow'}">users you follow</span>
+            <span th:if="${followingCount == 0}">no one (you're not following anyone yet)</span>
+        </span>
     </p>
 
     <!-- Filter Controls -->
     <div class="card mb-4">
         <div class="card-body">
-            <form th:action="@{/timeline}" method="get" class="row g-3 align-items-end">
+            <div class="row g-3 align-items-end">
                 <div class="col-auto">
-                    <label for="userFilter" class="form-label">Filter by user:</label>
-                    <select class="form-select" id="userFilter" name="user">
-                        <option value="">All users</option>
-                        <option th:value="${currentUser.username}"
-                                th:selected="${filterUser != null and filterUser.id == currentUser.id}"
-                                th:text="'Me (' + ${currentUser.username} + ')'">Me</option>
-                        <option th:each="followedUser : ${followedUsers}"
-                                th:value="${followedUser.username}"
-                                th:selected="${filterUser != null and filterUser.id == followedUser.id}"
-                                th:text="${followedUser.username}">Username</option>
-                    </select>
+                    <label class="form-label">Timeline:</label>
+                    <div class="btn-group" role="group" aria-label="Timeline scope">
+                        <a th:href="@{/timeline(scope='following', size=${pageSize}, sort=${sortDir})}"
+                           class="btn"
+                           th:classappend="${scope == 'following'} ? 'btn-primary' : 'btn-outline-primary'">Users you follow</a>
+                        <a th:href="@{/timeline(scope='all', size=${pageSize}, sort=${sortDir})}"
+                           class="btn"
+                           th:classappend="${scope == 'all'} ? 'btn-primary' : 'btn-outline-primary'">All users</a>
+                    </div>
                 </div>
-                <input type="hidden" name="size" th:value="${pageSize}" />
-                <input type="hidden" name="sort" th:value="${sortDir}" />
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-primary">Filter</button>
-                    <a th:if="${filterUser != null}" th:href="@{/timeline(size=${pageSize}, sort=${sortDir})}" class="btn btn-outline-secondary ms-2">Clear Filter</a>
+                <div class="col-auto" th:if="${scope == 'following'}">
+                    <form th:action="@{/timeline(scope='following')}" method="get" class="row g-2 align-items-end">
+                        <div class="col-auto">
+                            <label for="userFilter" class="form-label">Filter by user:</label>
+                            <select class="form-select" id="userFilter" name="user">
+                                <option value="">Everyone you follow</option>
+                                <option th:value="${currentUser.username}"
+                                        th:selected="${filterUser != null and filterUser.id == currentUser.id}"
+                                        th:text="'Me (' + ${currentUser.username} + ')'">Me</option>
+                                <option th:each="followedUser : ${followedUsers}"
+                                        th:value="${followedUser.username}"
+                                        th:selected="${filterUser != null and filterUser.id == followedUser.id}"
+                                        th:text="${followedUser.username}">Username</option>
+                            </select>
+                        </div>
+                        <input type="hidden" name="size" th:value="${pageSize}" />
+                        <input type="hidden" name="sort" th:value="${sortDir}" />
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                            <a th:if="${filterUser != null}" th:href="@{/timeline(scope='following', size=${pageSize}, sort=${sortDir})}" class="btn btn-outline-secondary ms-2">Clear Filter</a>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -61,15 +79,16 @@
     <div th:if="${filterUser != null}" class="mb-3">
         <span class="badge bg-info fs-6">
             Showing snippets from: <span th:text="${filterUser.username}">username</span>
-            <a th:href="@{/timeline(size=${pageSize}, sort=${sortDir})}" class="text-white ms-2" title="Clear filter">&times;</a>
+            <a th:href="@{/timeline(scope='following', size=${pageSize}, sort=${sortDir})}" class="text-white ms-2" title="Clear filter">&times;</a>
         </span>
     </div>
 
     <a th:href="@{/snippets/new}" class="btn btn-success mb-3">New Snippet</a>
 
     <div th:if="${snippets != null && #lists.isEmpty(snippets)}" class="alert alert-info">
-        <span th:if="${filterUser != null}">No snippets found for this user.</span>
-        <span th:unless="${filterUser != null}">
+        <span th:if="${scope == 'all'}">No snippets found.</span>
+        <span th:if="${scope == 'following' and filterUser != null}">No snippets found for this user.</span>
+        <span th:if="${scope == 'following' and filterUser == null}">
             <span th:if="${followingCount == 0}">You haven't created any snippets yet. <a th:href="@{/snippets/new}">Create your first snippet!</a></span>
             <span th:unless="${followingCount == 0}">No snippets found in your timeline.</span>
         </span>
@@ -80,7 +99,7 @@
             <div class="d-flex justify-content-between align-items-start">
                 <div class="d-flex flex-grow-1">
                     <a th:href="@{'/profile/' + ${snippet.poster.username}}" class="me-3">
-                        <img th:src="@{'/user/' + ${snippet.poster.username} + '/icon/thumbnail?v=' + ${#dates.createNow().time}}"
+                        <img th:src="@{'/user/' + ${snippet.poster.username} + '/icon/thumbnail'}"
                              alt="User icon"
                              class="rounded-circle"
                              style="width: 32px; height: 32px; object-fit: cover;">
@@ -110,14 +129,14 @@
         <ul class="pagination justify-content-center">
             <!-- First Page -->
             <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                <a class="page-link" th:href="@{/timeline(page=0, size=${pageSize}, sort=${sortDir}, user=${filterUser?.username})}" aria-label="First">
+                <a class="page-link" th:href="@{/timeline(scope=${scope}, page=0, size=${pageSize}, sort=${sortDir}, user=${filterUser?.username})}" aria-label="First">
                     <span aria-hidden="true">&laquo;&laquo;</span>
                 </a>
             </li>
 
             <!-- Previous Page -->
             <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                <a class="page-link" th:href="@{/timeline(page=${currentPage - 1}, size=${pageSize}, sort=${sortDir}, user=${filterUser?.username})}" aria-label="Previous">
+                <a class="page-link" th:href="@{/timeline(scope=${scope}, page=${currentPage - 1}, size=${pageSize}, sort=${sortDir}, user=${filterUser?.username})}" aria-label="Previous">
                     <span aria-hidden="true">&laquo;</span>
                 </a>
             </li>
@@ -127,7 +146,7 @@
                 <li class="page-item"
                     th:if="${pageNum < 2 or pageNum >= totalPages - 2 or (pageNum >= currentPage - 2 and pageNum <= currentPage + 2)}"
                     th:classappend="${pageNum == currentPage} ? 'active'">
-                    <a class="page-link" th:href="@{/timeline(page=${pageNum}, size=${pageSize}, sort=${sortDir}, user=${filterUser?.username})}" th:text="${pageNum + 1}">1</a>
+                    <a class="page-link" th:href="@{/timeline(scope=${scope}, page=${pageNum}, size=${pageSize}, sort=${sortDir}, user=${filterUser?.username})}" th:text="${pageNum + 1}">1</a>
                 </li>
                 <li class="page-item disabled"
                     th:if="${(pageNum == 2 and currentPage > 4) or (pageNum == totalPages - 3 and currentPage < totalPages - 5)}">
@@ -137,14 +156,14 @@
 
             <!-- Next Page -->
             <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
-                <a class="page-link" th:href="@{/timeline(page=${currentPage + 1}, size=${pageSize}, sort=${sortDir}, user=${filterUser?.username})}" aria-label="Next">
+                <a class="page-link" th:href="@{/timeline(scope=${scope}, page=${currentPage + 1}, size=${pageSize}, sort=${sortDir}, user=${filterUser?.username})}" aria-label="Next">
                     <span aria-hidden="true">&raquo;</span>
                 </a>
             </li>
 
             <!-- Last Page -->
             <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
-                <a class="page-link" th:href="@{/timeline(page=${totalPages - 1}, size=${pageSize}, sort=${sortDir}, user=${filterUser?.username})}" aria-label="Last">
+                <a class="page-link" th:href="@{/timeline(scope=${scope}, page=${totalPages - 1}, size=${pageSize}, sort=${sortDir}, user=${filterUser?.username})}" aria-label="Last">
                     <span aria-hidden="true">&raquo;&raquo;</span>
                 </a>
             </li>
@@ -154,16 +173,16 @@
         <div class="text-center mt-2">
             <span class="text-muted">Items per page: </span>
             <div class="btn-group btn-group-sm" role="group" aria-label="Page size">
-                <a th:href="@{/timeline(page=0, size=10, sort=${sortDir}, user=${filterUser?.username})}"
+                <a th:href="@{/timeline(scope=${scope}, page=0, size=10, sort=${sortDir}, user=${filterUser?.username})}"
                    class="btn"
                    th:classappend="${pageSize == 10} ? 'btn-primary' : 'btn-outline-primary'">10</a>
-                <a th:href="@{/timeline(page=0, size=20, sort=${sortDir}, user=${filterUser?.username})}"
+                <a th:href="@{/timeline(scope=${scope}, page=0, size=20, sort=${sortDir}, user=${filterUser?.username})}"
                    class="btn"
                    th:classappend="${pageSize == 20} ? 'btn-primary' : 'btn-outline-primary'">20</a>
-                <a th:href="@{/timeline(page=0, size=50, sort=${sortDir}, user=${filterUser?.username})}"
+                <a th:href="@{/timeline(scope=${scope}, page=0, size=50, sort=${sortDir}, user=${filterUser?.username})}"
                    class="btn"
                    th:classappend="${pageSize == 50} ? 'btn-primary' : 'btn-outline-primary'">50</a>
-                <a th:href="@{/timeline(page=0, size=100, sort=${sortDir}, user=${filterUser?.username})}"
+                <a th:href="@{/timeline(scope=${scope}, page=0, size=100, sort=${sortDir}, user=${filterUser?.username})}"
                    class="btn"
                    th:classappend="${pageSize == 100} ? 'btn-primary' : 'btn-outline-primary'">100</a>
             </div>

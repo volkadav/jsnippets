@@ -21,6 +21,12 @@ import java.util.Optional;
 @Slf4j
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
+    /**
+     * Session attribute set on successful login and consumed (removed) on the
+     * first authenticated view, so the welcome flash only shows once.
+     */
+    public static final String WELCOME_FLASH_KEY = "welcomeAfterLogin";
+
     private final UserService userService;
 
     public CustomAuthenticationSuccessHandler(UserService userService) {
@@ -42,6 +48,9 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
                 log.debug("Updated last login time for user: {}", username);
             }
         }
+
+        // Flag the next view to show the one-time welcome flash
+        request.getSession().setAttribute(WELCOME_FLASH_KEY, Boolean.TRUE);
 
         // Redirect to default success URL (home page)
         response.sendRedirect(request.getContextPath() + "/");

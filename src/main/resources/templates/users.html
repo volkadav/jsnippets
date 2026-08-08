@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Users - JSnippets</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.8/css/bootstrap.min.css}" />
+    <script th:src="@{/webjars/bootstrap/5.3.8/js/bootstrap.bundle.min.js}"></script>
+</head>
+<body>
+<div class="container mt-4">
+    <h1 class="mb-4">Users</h1>
+
+    <form th:action="@{/users}" method="get" class="row g-2 mb-4">
+        <div class="col-auto flex-grow-1">
+            <input type="text" name="q" class="form-control"
+                   placeholder="Search by username or bio..."
+                   th:value="${query}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </form>
+
+    <div th:if="${#lists.isEmpty(users)}" class="alert alert-info">
+        <span th:if="${query == null or query.isEmpty()}">No users yet.</span>
+        <span th:if="${query != null and !query.isEmpty()}">No users match "<span th:text="${query}"></span>".</span>
+    </div>
+
+    <ul class="list-group" th:if="${!#lists.isEmpty(users)}">
+        <li class="list-group-item d-flex align-items-center" th:each="user : ${users}">
+            <img th:src="@{'/user/' + ${user.username} + '/icon'}"
+                 alt="User icon"
+                 class="rounded-circle me-3"
+                 style="width: 48px; height: 48px; object-fit: cover;">
+            <div class="flex-grow-1">
+                <div>
+                    <a th:href="@{'/profile/' + ${user.username}}"
+                       class="fw-bold text-decoration-none"
+                       th:text="${user.username}">username</a>
+                    <span th:if="${user.id == currentUserId}" class="badge bg-secondary ms-2">you</span>
+                </div>
+                <small class="text-muted" th:if="${user.bio != null and !#strings.isEmpty(user.bio)}"
+                       th:text="${#strings.length(user.bio) > 120 ? #strings.substring(user.bio, 0, 120) + '...' : user.bio}">bio</small>
+                <small class="text-muted" th:unless="${user.bio != null and !#strings.isEmpty(user.bio)}">
+                    No bio yet.
+                </small>
+                <br/>
+                <small class="text-muted">
+                    <span th:text="${followerCounts[user.id] != null ? followerCounts[user.id] : 0}">0</span> followers
+                    &middot;
+                    <span th:text="${followingCounts[user.id] != null ? followingCounts[user.id] : 0}">0</span> following
+                </small>
+            </div>
+            <a th:href="@{'/profile/' + ${user.username}}"
+               class="btn btn-sm btn-outline-primary">View Profile</a>
+        </li>
+    </ul>
+
+    <!-- Pagination Controls -->
+    <nav th:if="${totalPages > 1}" aria-label="User pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/users(q=${query}, page=0, size=${pageSize})}" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/users(q=${query}, page=${currentPage - 1}, size=${pageSize})}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            <th:block th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}">
+                <li class="page-item"
+                    th:if="${pageNum < 2 or pageNum >= totalPages - 2 or (pageNum >= currentPage - 2 and pageNum <= currentPage + 2)}"
+                    th:classappend="${pageNum == currentPage} ? 'active'">
+                    <a class="page-link" th:href="@{/users(q=${query}, page=${pageNum}, size=${pageSize})}"
+                       th:text="${pageNum + 1}">1</a>
+                </li>
+                <li class="page-item disabled"
+                    th:if="${(pageNum == 2 and currentPage > 4) or (pageNum == totalPages - 3 and currentPage < totalPages - 5)}">
+                    <span class="page-link">...</span>
+                </li>
+            </th:block>
+            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{/users(q=${query}, page=${currentPage + 1}, size=${pageSize})}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{/users(q=${query}, page=${totalPages - 1}, size=${pageSize})}" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="text-center text-muted mt-2">
+            <small>Showing <span th:text="${#lists.size(users)}">0</span> of
+                <span th:text="${userCount}">0</span> users
+                (Page <span th:text="${currentPage + 1}">1</span> of <span th:text="${totalPages}">1</span>)</small>
+        </div>
+    </nav>
+
+    <br/>
+    <a th:href="@{'/'}" class="btn btn-primary mb-3">Home</a>
+</div>
+</body>
+</html>

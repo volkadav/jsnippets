@@ -95,4 +95,23 @@ public class SnippetsControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Timeline")));
     }
+
+    @Test
+    @WithMockUser(username = "alice")
+    public void getTimelineDefaultScopeIsFollowing() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.get("/timeline")
+                .accept(MediaType.TEXT_HTML))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Users you follow")));
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
+    public void getTimelineAllScope() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.get("/timeline")
+                .param("scope", "all")
+                .accept(MediaType.TEXT_HTML))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("All users")));
+    }
 }

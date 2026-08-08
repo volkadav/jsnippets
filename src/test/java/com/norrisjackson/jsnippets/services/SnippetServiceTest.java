@@ -138,7 +138,7 @@ class SnippetServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
         List<Snippet> snippets = Arrays.asList(testSnippet, anotherSnippet);
         Page<Snippet> page = new PageImpl<>(snippets, pageable, 2);
-        when(snippetRepository.findAll(pageable)).thenReturn(page);
+        when(snippetRepository.findAllSnippets(pageable)).thenReturn(page);
 
         // When
         Page<Snippet> result = snippetService.getAllSnippets(pageable);
@@ -147,7 +147,7 @@ class SnippetServiceTest {
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getContent()).containsExactly(testSnippet, anotherSnippet);
         assertThat(result.getTotalElements()).isEqualTo(2);
-        verify(snippetRepository).findAll(pageable);
+        verify(snippetRepository).findAllSnippets(pageable);
     }
 
     @Test

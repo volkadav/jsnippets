@@ -1,5 +1,7 @@
 package com.norrisjackson.jsnippets.data;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.QueryHints;
@@ -154,4 +156,42 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT COUNT(f) > 0 FROM User u JOIN u.followedUsers f WHERE u.id = :followerId AND f.id = :followedId")
     boolean isFollowing(@Param("followerId") Long followerId, @Param("followedId") Long followedId);
+
+    /**
+     * Search users by username or bio, with pagination.
+     * Case-insensitive substring match; the caller passes a wildcard-escaped pattern.
+     * Uses a fetch join on followers/followedUsers only if needed; here we keep the
+     * base projection and let callers resolve counts separately to avoid fan-out.
+     *
+     * @param pattern the search pattern (e.g. "%term%" with %/_ escaped)
+     * @param pageable the pagination information
+     * @return page of matching users
+     */
+    @Query(value = "SELECT u FROM User u " +
+                   "WHERE LOWER(u.username) LIKE :pattern " +
+                   "OR (u.bio IS NOT NULL AND LOWER(u.bio) LIKE :pattern)",
+           countQuery = "SELECT COUNT(u) FROM User u " +
+                        "WHERE LOWER(u.username) LIKE :pattern " +
+                        "OR (u.bio IS NOT NULL AND LOWER(u.bio) LIKE :pattern)")
+    Page<User> searchUsers(@Param("pattern") String pattern, Pageable pageable);
+
+    /**
+     * Count followers for a batch of user IDs in one query.
+     * Used by the user directory to avoid N+1 queries.
+     *
+     * @param userIds the IDs to count followers for (must not be empty)
+     * @return list of [userId, followerCount] object arrays
+     */
+    @Query("SELECT u.id, COUNT(f) FROM User u LEFT JOIN u.followers f WHERE u.id IN :userIds GROUP BY u.id")
+    List<Object[]> countFollowersBatch(@Param("userIds") List<Long> userIds);
+
+    /**
+     * Count followed users for a batch of user IDs in one query.
+     * Used by the user directory to avoid N+1 queries.
+     *
+     * @param userIds the IDs to count followed users for (must not be empty)
+     * @return list of [userId, followingCount] object arrays
+     */
+    @Query("SELECT u.id, COUNT(f) FROM User u LEFT JOIN u.followedUsers f WHERE u.id IN :userIds GROUP BY u.id")
+    List<Object[]> countFollowingBatch(@Param("userIds") List<Long> userIds);
 }

@@ -104,5 +104,29 @@ public interface SnippetRepository extends JpaRepository<Snippet, Long> {
                                                       @Param("followedUserIds") List<Long> followedUserIds,
                                                       @Param("filterUserId") Long filterUserId,
                                                       Pageable pageable);
+
+    /**
+     * Search snippets by content across all users, with pagination.
+     * Case-insensitive substring match; the caller passes a wildcard-escaped pattern.
+     *
+     * @param escapedQuery the search pattern (e.g. "%term%" with %/_ escaped)
+     * @param pageable     the pagination information
+     * @return page of matching snippets ordered per pageable
+     */
+    @Query(value = "SELECT s FROM Snippet s JOIN FETCH s.poster WHERE LOWER(s.contents) LIKE :pattern ESCAPE '\\'",
+           countQuery = "SELECT COUNT(s) FROM Snippet s WHERE LOWER(s.contents) LIKE :pattern ESCAPE '\\'")
+    Page<Snippet> searchByContents(@Param("pattern") String pattern, Pageable pageable);
+
+    /**
+     * Find all snippets across all users, with pagination.
+     * Used by the timeline's "all users" mode (no user filter).
+     * Eagerly fetches the poster to prevent N+1 queries.
+     *
+     * @param pageable the pagination information
+     * @return page of all snippets
+     */
+    @Query(value = "SELECT s FROM Snippet s JOIN FETCH s.poster",
+           countQuery = "SELECT COUNT(s) FROM Snippet s")
+    Page<Snippet> findAllSnippets(Pageable pageable);
 }
 

@@ -112,9 +112,15 @@ public class Snippets {
     }
 
     /**
-     * Display a consolidated timeline of snippets from the current user and users they follow.
+     * Display a consolidated timeline of snippets.
+     * Supports two scope modes via the {@code scope} parameter:
+     * <ul>
+     *   <li>{@code following} (default): snippets from the current user and users they follow</li>
+     *   <li>{@code all}: snippets from every user, no user filter</li>
+     * </ul>
      *
-     * @param filterUser optional username to filter by
+     * @param scope      timeline scope ("all" or "following"; default "following")
+     * @param filterUser optional username to filter by (following mode only)
      * @param page       optional page number
      * @param size       optional page size
      * @param sortDir    optional sort direction ("asc" or "desc")
@@ -123,7 +129,8 @@ public class Snippets {
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/timeline")
-    String timeline(@RequestParam(name = "user", required = false) String filterUser,
+    String timeline(@RequestParam(name = "scope", required = false) String scope,
+                    @RequestParam(name = "user", required = false) String filterUser,
                     @RequestParam(name = "page", required = false) Integer page,
                     @RequestParam(name = "size", required = false) Integer size,
                     @RequestParam(name = "sort", required = false) String sortDir,
@@ -135,6 +142,10 @@ public class Snippets {
             log.error("No current user found in model for timeline");
             return "redirect:/login";
         }
+
+        String activeScope = "all".equalsIgnoreCase(scope) ? "all" : "following";
+        model.addAttribute("scope", activeScope);
+
         List<User> followedUsers = userService.getFollowedUsers(currentUser.getId());
         List<Long> followedUserIds = followedUsers.stream().map(User::getId).toList();
 
@@ -164,8 +175,11 @@ public class Snippets {
         Page<Snippet> snippetPage;
         User filterUserEntity = null;
 
-        if (filterUser != null && !filterUser.isBlank()) {
-            // Filter by specific user
+        if ("all".equals(activeScope)) {
+            // All users mode: no user filter of any kind
+            snippetPage = snippetService.getAllSnippetsPage(pageable);
+        } else if (filterUser != null && !filterUser.isBlank()) {
+            // Filter by specific user (following mode)
             filterUserEntity = userService.getUserByUsername(filterUser).orElse(null);
             if (filterUserEntity != null) {
                 // Validate filter user is self or someone we follow
@@ -184,13 +198,13 @@ public class Snippets {
                 snippetPage = snippetService.getTimelineSnippets(currentUser.getId(), followedUserIds, pageable);
             }
         } else {
-            // No filter, show all timeline
+            // No filter, show timeline of self + followed users
             snippetPage = snippetService.getTimelineSnippets(currentUser.getId(), followedUserIds, pageable);
         }
 
         long snippetCount = snippetPage.getTotalElements();
-        log.info("Found {} timeline snippets for user {} (page {} of {})",
-                snippetCount, currentUser.getUsername(), pageNumber + 1, snippetPage.getTotalPages());
+        log.info("Found {} timeline snippets for user {} (scope {}, page {} of {})",
+                snippetCount, currentUser.getUsername(), activeScope, pageNumber + 1, snippetPage.getTotalPages());
 
         model.addAttribute("snippets", snippetPage.getContent());
         model.addAttribute("snippetCount", snippetCount);
