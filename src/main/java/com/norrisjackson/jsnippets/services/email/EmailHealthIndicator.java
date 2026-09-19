@@ -4,8 +4,8 @@ import com.norrisjackson.jsnippets.configs.EmailIngestConfig;
 import jakarta.mail.Session;
 import jakarta.mail.Store;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 

@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.16</version>
+        <version>4.1.1</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.norrisjackson</groupId>
@@ -14,23 +14,13 @@
     <description>snippets server</description>
 
     <properties>
+        <java.version>21</java.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <lombok.version>1.18.48</lombok.version>
-        <postgresql.version>42.7.13</postgresql.version>
-        <liquibase.version>4.33.0</liquibase.version>
         <bootstrap.version>5.3.8</bootstrap.version>
         <jjwt.version>0.13.0</jjwt.version>
         <jsoup.version>1.23.2</jsoup.version>
-        <caffeine.version>3.2.4</caffeine.version>
-        <!-- Security overrides ahead of the Spring Boot 3.5.16 BOM -->
-        <tomcat.version>10.1.59</tomcat.version>
-        <netty.version>4.1.137.Final</netty.version>
-        <jackson-bom.version>2.21.5</jackson-bom.version>
-        <log4j2.version>2.25.5</log4j2.version>
-        <!-- CVE-2025-48924: commons-lang3 ClassUtils.getClass StackOverflowError on long inputs.
-             Spring Boot 3.5.13 still manages 3.17.0; override until its BOM is updated. -->
-        <commons-lang3.version>3.20.0</commons-lang3.version>
     </properties>
 
     <!-- note for mvn release plugin: use the github "release" action instead of cli -->
@@ -49,7 +39,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.session</groupId>
@@ -99,32 +89,29 @@
             <version>${bootstrap.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.liquibase</groupId>
-            <artifactId>liquibase-core</artifactId>
-            <version>${liquibase.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-lang3</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-liquibase</artifactId>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>${postgresql.version}</version>
             <scope>runtime</scope>
         </dependency>
 
         <!-- test dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-restclient</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -138,7 +125,7 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.8.13</version>
+            <version>3.1.1</version>
         </dependency>
 
         <!-- JWT dependencies -->
@@ -155,7 +142,7 @@
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-jackson</artifactId>
+            <artifactId>jjwt-gson</artifactId>
             <version>${jjwt.version}</version>
             <scope>runtime</scope>
         </dependency>
@@ -171,7 +158,6 @@
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
-            <version>${caffeine.version}</version>
         </dependency>
     </dependencies>
 
@@ -221,8 +207,18 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                    <!-- Boot 4 no longer bundles optional dependencies in the uber jar.
+                         The app references DataRedisAutoConfiguration and the Spring Session
+                         Redis classes at startup, so they must be present at runtime. -->
+                    <includeOptional>true</includeOptional>
                 </configuration>
                 <executions>
+                    <execution>
+                        <id>build-info</id>
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                    </execution>
                     <execution>
                         <goals>
                             <goal>repackage</goal>

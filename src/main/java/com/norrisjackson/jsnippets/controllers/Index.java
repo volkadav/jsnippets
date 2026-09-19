@@ -1,5 +1,6 @@
 package com.norrisjackson.jsnippets.controllers;
 
+import com.norrisjackson.jsnippets.AppInfo;
 import com.norrisjackson.jsnippets.configs.PaginationConfig;
 import com.norrisjackson.jsnippets.data.Snippet;
 import com.norrisjackson.jsnippets.data.User;
@@ -22,10 +23,12 @@ import java.util.List;
 public class Index {
     private final SnippetService snippetService;
     private final PaginationConfig paginationConfig;
+    private final AppInfo appInfo;
 
-    public Index(SnippetService snippetService, PaginationConfig paginationConfig) {
+    public Index(SnippetService snippetService, PaginationConfig paginationConfig, AppInfo appInfo) {
         this.snippetService = snippetService;
         this.paginationConfig = paginationConfig;
+        this.appInfo = appInfo;
     }
 
     /**
@@ -43,6 +46,7 @@ public class Index {
                         HttpSession session,
                         Model model) {
         User currentUser = (User) model.getAttribute("currentUser");
+        model.addAttribute("appInfo", appInfo);
 
         if (currentUser != null) {
             model.addAttribute("username", currentUser.getUsername());

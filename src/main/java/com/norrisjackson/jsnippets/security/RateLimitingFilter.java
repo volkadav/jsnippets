@@ -1,6 +1,5 @@
 package com.norrisjackson.jsnippets.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -33,7 +33,7 @@ import java.util.Map;
 public class RateLimitingFilter extends OncePerRequestFilter {
 
     private final RateLimiter rateLimiter;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
 
     // Authentication endpoint limits (stricter)
     @Value("${rate.limit.auth.requests:20}")
@@ -52,9 +52,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     @Value("${rate.limit.enabled:true}")
     private boolean rateLimitEnabled;
 
-    public RateLimitingFilter(RateLimiter rateLimiter, ObjectMapper objectMapper) {
+    public RateLimitingFilter(RateLimiter rateLimiter, JsonMapper jsonMapper) {
         this.rateLimiter = rateLimiter;
-        this.objectMapper = objectMapper;
+        this.jsonMapper = jsonMapper;
     }
 
     @Override
@@ -123,7 +123,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         errorBody.put("timestamp", Instant.now().toString());
         errorBody.put("path", path);
 
-        response.getWriter().write(objectMapper.writeValueAsString(errorBody));
+        response.getWriter().write(jsonMapper.writeValueAsString(errorBody));
     }
 
     /**

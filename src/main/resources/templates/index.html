@@ -15,7 +15,7 @@
             </span>
         </div>
         <div class="d-flex align-items-center justify-content-between mb-4">
-            <h1 class="mb-0">jSnippets <small class="text-muted">status reporting, simplified</small></h1>
+            <h1 class="mb-0" th:title="${appInfo.display}">jSnippets <small class="text-muted">status reporting, simplified</small></h1>
             <form th:action="@{/search}" method="get" class="d-flex" th:if="${username}">
                 <input type="text" name="q" class="form-control me-2" placeholder="Search users or snippets..." aria-label="Search">
                 <button type="submit" class="btn btn-primary">Search</button>

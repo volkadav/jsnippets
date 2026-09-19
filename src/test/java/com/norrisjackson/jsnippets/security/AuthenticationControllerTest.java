@@ -1,6 +1,6 @@
 package com.norrisjackson.jsnippets.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.norrisjackson.jsnippets.controllers.rest.AuthenticationController;
 import com.norrisjackson.jsnippets.controllers.rest.dto.AuthenticationRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +41,7 @@ class AuthenticationControllerTest {
 
     private MockMvc mockMvc;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private JsonMapper objectMapper = JsonMapper.builder().build();
 
     @Mock
     private AuthenticationManager authenticationManager;

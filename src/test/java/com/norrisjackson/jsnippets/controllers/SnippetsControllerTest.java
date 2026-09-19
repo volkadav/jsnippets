@@ -2,7 +2,7 @@ package com.norrisjackson.jsnippets.controllers;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -23,7 +23,7 @@ public class SnippetsControllerTest {
         mvc.perform(MockMvcRequestBuilders.get("/snippets")
                 .accept(MediaType.TEXT_HTML))
                 .andExpect(status().isFound()) // 302 redirect expected
-                .andExpect(redirectedUrlPattern("**/login"));
+                .andExpect(redirectedUrl("/login"));
     }
 
     @Test
@@ -62,7 +62,7 @@ public class SnippetsControllerTest {
         mvc.perform(MockMvcRequestBuilders.get("/timeline")
                 .accept(MediaType.TEXT_HTML))
                 .andExpect(status().isFound())
-                .andExpect(redirectedUrlPattern("**/login"));
+                .andExpect(redirectedUrl("/login"));
     }
 
     @Test

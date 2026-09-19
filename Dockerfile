@@ -28,6 +28,11 @@ ARG BUILD_DATE=unknown
 ARG APP_VERSION=unknown
 ARG VCS_REF=unknown
 
+# Expose build metadata to the application (surfaced as a tooltip on the home page).
+# APP_VERSION is a fallback; the authoritative version comes from build-info.properties.
+ENV APP_VERSION="${APP_VERSION}" \
+  APP_GIT_COMMIT="${VCS_REF}"
+
 # OCI Image metadata labels
 LABEL org.opencontainers.image.title="jsnippets" \
   org.opencontainers.image.description="Snippets Server - A progress snippet sharing platform" \
