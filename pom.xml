@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.1</version>
+        <version>4.1.2</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.norrisjackson</groupId>
@@ -20,7 +20,7 @@
         <lombok.version>1.18.48</lombok.version>
         <bootstrap.version>5.3.8</bootstrap.version>
         <jjwt.version>0.13.0</jjwt.version>
-        <jsoup.version>1.23.2</jsoup.version>
+        <jsoup.version>1.24.1</jsoup.version>
     </properties>
 
     <!-- note for mvn release plugin: use the github "release" action instead of cli -->
@@ -117,7 +117,7 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>2.5.250</version>
+            <version>2.5.252</version>
             <scope>test</scope>
         </dependency>
 
@@ -125,7 +125,7 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>3.1.1</version>
+            <version>3.2.0</version>
         </dependency>
 
         <!-- JWT dependencies -->
@@ -191,7 +191,7 @@
                 <configuration>
                     <image>
                         <name>${project.artifactId}</name>
-                        <builder>paketobuildpacks/builder-noble-java-tiny:0.0.137@sha256:c8b5f936e6d9af492af4a493b4a03eaf496fe51f206c5d53ccddab7871ed4ef5</builder>
+                        <builder>paketobuildpacks/builder-noble-java-tiny:0.0.215@sha256:020054f77501453747311ce5c5e9f53402014c9de1f52d8405b88045534b7925</builder>
                     </image>
                     <docker>
                         <!-- on macOS, if you're using podman, you'll want to use

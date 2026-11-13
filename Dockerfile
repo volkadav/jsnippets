@@ -1,5 +1,5 @@
 # Build stage - pin the base image to an audited digest for reproducibility.
-FROM eclipse-temurin:21-jdk-alpine-3.23@sha256:4fb80de7aeb277ad949cfbe89b4f504e50bb34c57fd908c5825236473d71e986 AS builder
+FROM eclipse-temurin:21-jdk-alpine-3.24@sha256:82801f9dcdcbad5a05082aba8c86d1da5b72ccb498e71318b1f91b5a477887b3 AS builder
 
 WORKDIR /app
 
@@ -21,7 +21,7 @@ COPY src ./src
 RUN ./mvnw clean package -DskipTests
 
 # Runtime stage, use a pinned JRE-only base.
-FROM eclipse-temurin:21-jre-alpine-3.23@sha256:704db3c40204a44f471191446ddd9cda5d60dab40f0e15c6507b815ed897238b
+FROM eclipse-temurin:21-jre-alpine-3.24@sha256:ac05c3c42b7c2f1a52c9bd52f01041fa1958231b15ebeae7420429cbc5baf474
 
 # Build arguments for dynamic metadata
 ARG BUILD_DATE=unknown
